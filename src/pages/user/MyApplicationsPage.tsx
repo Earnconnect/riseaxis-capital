@@ -5,8 +5,8 @@ import {
   FileText, CheckCircle2, Clock, XCircle, DollarSign, Plus,
   ChevronDown, ChevronUp, Shield, GraduationCap, HeartPulse,
   Briefcase, Building2, Users, Banknote, AlertTriangle,
-  MessageSquare, RefreshCw, Search, Filter,
-  ClipboardList, BarChart3, Award, ExternalLink,
+  MessageSquare, RefreshCw, Search,
+  ClipboardList, BarChart3, Award, ExternalLink, Lock,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -99,19 +99,53 @@ export default function MyApplicationsPage() {
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-5 lg:px-8 py-6 sm:py-8 space-y-6">
 
-      {/* Header */}
+      {/* Official Grant Portal Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: T.green }}>Grant Portal</p>
-          <h1 className="text-2xl font-bold" style={{ color: T.head }}>My Applications</h1>
-          <p className="text-sm mt-0.5" style={{ color: T.muted }}>Track the status and history of all your grant applications.</p>
+        className="rounded-2xl overflow-hidden" style={{ boxShadow: T.card }}>
+        {/* Navy org band */}
+        <div className="p-4 sm:p-5" style={{ background: 'linear-gradient(135deg, #0C1A36 0%, #1E3A5F 100%)' }}>
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="RiseAxis Capital" className="w-9 h-9 sm:w-11 sm:h-11 object-cover rounded-xl shrink-0" />
+              <div>
+                <div className="font-bold text-white text-sm sm:text-base leading-tight">RiseAxis Capital</div>
+                <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Grant Management Portal</div>
+              </div>
+            </div>
+            <Link to="/apply"
+              className="shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white transition-all hover:brightness-105"
+              style={{ background: 'linear-gradient(135deg,#16A34A,#15803D)', boxShadow: '0 4px 14px rgba(22,163,74,0.3)' }}>
+              <Plus size={13} strokeWidth={2.5} /> New Application
+            </Link>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {['501(c)(3) Nonprofit', 'EIN: 27-0964813', 'Federal Grant Program', 'IRS Tax-Exempt', 'NACHA Compliant'].map(badge => (
+              <span key={badge} className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold"
+                style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                {badge}
+              </span>
+            ))}
+          </div>
         </div>
-        <Link to="/apply"
-          className="shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:brightness-105"
-          style={{ background: 'linear-gradient(135deg,#16A34A,#15803D)', boxShadow: '0 4px 14px rgba(22,163,74,0.3)' }}>
-          <Plus size={15} strokeWidth={2.5} /> New Application
-        </Link>
+        {/* Official seals strip */}
+        <div className="px-4 sm:px-5 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1"
+          style={{ background: T.white, borderTop: '1px solid #E2E8F0' }}>
+          <div className="flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: '#475569' }}>
+            <Shield size={10} style={{ color: '#16A34A' }} /> Federally Recognized Nonprofit
+          </div>
+          <div className="hidden sm:block w-px h-3 bg-slate-200" />
+          <div className="flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: '#475569' }}>
+            <CheckCircle2 size={10} style={{ color: '#2563EB' }} /> IRS Tax-Exempt 501(c)(3)
+          </div>
+          <div className="hidden sm:block w-px h-3 bg-slate-200" />
+          <div className="flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: '#475569' }}>
+            <Lock size={10} style={{ color: '#7C3AED' }} /> 256-bit SSL Encrypted
+          </div>
+          <div className="ml-auto">
+            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: T.green }}>Grant Portal</p>
+            <p className="text-xs font-bold" style={{ color: T.head }}>My Applications</p>
+          </div>
+        </div>
       </motion.div>
 
       {/* Stats row */}

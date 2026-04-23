@@ -8,6 +8,7 @@ import {
   Plus, Lock, GraduationCap, HeartPulse, Briefcase,
   Building2, Users, DollarSign, Star, RefreshCw,
   File, Image, FileCheck, Eye, EyeOff, Edit3,
+  MapPin, Phone, Mail,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -148,59 +149,150 @@ export default function ApplicationDetailPage() {
           <ChevronLeft size={15} /> Back to My Applications
         </Link>
 
-        <div className="rounded-2xl p-6 relative overflow-hidden"
-          style={{
-            background: `linear-gradient(135deg, ${SC(app.status)}F0, ${SC(app.status)}BB)`,
-            boxShadow: `0 8px 32px ${SC(app.status)}35`,
-          }}>
-          <div className="absolute -right-10 -top-10 w-44 h-44 rounded-full pointer-events-none" style={{ background: 'rgba(255,255,255,0.1)' }} />
-          <div className="relative flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                <ProgIcon size={20} className="text-white" />
+        {/* Official Grant Document Card */}
+        <div className="rounded-2xl overflow-hidden" style={{ boxShadow: T.lift }}>
+
+          {/* ── Org Header Band ── */}
+          <div style={{ background: 'linear-gradient(135deg, #0C1A36 0%, #1E3A5F 100%)' }}>
+            <div className="p-4 sm:p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <img src="/logo.png" alt="RiseAxis Capital" className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-xl shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-white text-base sm:text-lg leading-tight">RiseAxis Capital</div>
+                  <div className="text-[11px] truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    {getGrantProgramLabel(app.grant_program)} Program
+                  </div>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-white/60 text-xs font-semibold mb-0.5 truncate">{getGrantProgramLabel(app.grant_program)}</p>
-                <p className="text-2xl sm:text-3xl font-black text-white leading-none mb-1">{formatCurrency(app.requested_amount)}</p>
-                <p className="font-mono text-white/40 text-xs">#{app.app_number}</p>
-                {app.approved_amount && app.approved_amount !== app.requested_amount && (
-                  <p className="text-white/80 text-sm font-semibold mt-1">Approved: {formatCurrency(app.approved_amount)}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {['501(c)(3) Nonprofit', 'EIN: 27-0964813', 'Federal Grant Program', 'IRS Tax-Exempt'].map(badge => (
+                  <span key={badge} className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold"
+                    style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    {badge}
+                  </span>
+                ))}
+                {app.status === 'disbursed' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold"
+                    style={{ background: 'rgba(22,163,74,0.25)', color: '#4ADE80', border: '1px solid rgba(74,222,128,0.3)' }}>
+                    <CheckCircle2 size={9} /> Funds Disbursed
+                  </span>
                 )}
               </div>
             </div>
-            <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2">
-              <Pill status={app.status} />
-              <p className="text-white/50 text-xs">Submitted {formatDateShort(app.created_at)}</p>
-              {app.reviewed_at && (
-                <p className="text-white/50 text-xs hidden sm:block">Reviewed {formatDateShort(app.reviewed_at)}</p>
+            {/* Contact strip */}
+            <div className="px-4 sm:px-5 py-2 flex flex-wrap gap-x-4 gap-y-0.5"
+              style={{ background: 'rgba(0,0,0,0.2)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="flex items-center gap-1.5 text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                <MapPin size={9} /> 3040 Idaho Ave NW, Washington, DC 20016
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                <Phone size={9} /> (702) 274-7227
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                <Mail size={9} /> grants@riseaxiscapital.com
+              </div>
+            </div>
+          </div>
+
+          {/* ── Application Status Band ── */}
+          <div className="relative overflow-hidden"
+            style={{ background: `linear-gradient(135deg, ${SC(app.status)}F0, ${SC(app.status)}BB)` }}>
+            <div className="absolute -right-10 -top-10 w-44 h-44 rounded-full pointer-events-none" style={{ background: 'rgba(255,255,255,0.08)' }} />
+            <div className="relative p-4 sm:p-5">
+
+              {/* Amount + status */}
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
+                <div>
+                  <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-1">Amount Requested</div>
+                  <div className="text-3xl sm:text-4xl font-black text-white leading-none">{formatCurrency(app.requested_amount)}</div>
+                  <div className="font-mono text-white/40 text-xs mt-1">#{app.app_number}</div>
+                  {app.approved_amount && app.approved_amount !== app.requested_amount && (
+                    <div className="text-white/80 text-sm font-semibold mt-1">Approved: {formatCurrency(app.approved_amount)}</div>
+                  )}
+                </div>
+                <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2">
+                  <Pill status={app.status} />
+                  <div className="text-white/50 text-xs">Submitted {formatDateShort(app.created_at)}</div>
+                  {app.reviewed_at && (
+                    <div className="text-white/40 text-xs hidden sm:block">Reviewed {formatDateShort(app.reviewed_at)}</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Document metadata grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+                {[
+                  { label: 'DOC NUMBER',  value: `#${app.app_number}` },
+                  { label: 'ISSUE DATE',  value: formatDateShort(app.created_at) },
+                  { label: 'FISCAL YEAR', value: 'FY 2026' },
+                  { label: 'STATUS',      value: getStatusLabel(app.status) },
+                ].map(({ label, value }) => (
+                  <div key={label} className="px-3 py-2 rounded-xl"
+                    style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)' }}>
+                    <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{label}</div>
+                    <div className="text-xs font-bold text-white truncate">{value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* ── Tracking Status Bar ── */}
+              {app.status !== 'rejected' && (
+                <div className="rounded-xl p-3" style={{ background: 'rgba(0,0,0,0.15)' }}>
+                  <div className="text-[9px] font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    Application Progress
+                  </div>
+                  <div className="flex items-start">
+                    {PIPELINE.map((step, i) => {
+                      const done = step.statuses.includes(app.status)
+                      const isCurrent = done && (i === PIPELINE.length - 1 || !PIPELINE[i + 1].statuses.includes(app.status))
+                      return (
+                        <div key={step.label} className="flex items-center flex-1">
+                          <div className="flex flex-col items-center">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
+                              style={{
+                                background: done ? '#fff' : 'rgba(255,255,255,0.15)',
+                                color: done ? SC(app.status) : 'rgba(255,255,255,0.35)',
+                                boxShadow: isCurrent ? '0 0 0 3px rgba(255,255,255,0.25)' : 'none',
+                              }}>
+                              {done ? <CheckCircle2 size={14} /> : i + 1}
+                            </div>
+                            <span className="text-[9px] font-semibold mt-1.5 whitespace-nowrap text-center"
+                              style={{ color: done ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)' }}>
+                              {step.label}
+                            </span>
+                            {isCurrent && (
+                              <span className="text-[8px] font-bold mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>● Active</span>
+                            )}
+                          </div>
+                          {i < PIPELINE.length - 1 && (
+                            <div className="h-0.5 flex-1 mx-2 mb-5 rounded-full"
+                              style={{ background: PIPELINE[i + 1].statuses.includes(app.status) ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)' }} />
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
               )}
             </div>
           </div>
 
-          {/* Mini pipeline */}
-          {app.status !== 'rejected' && (
-            <div className="relative mt-5 flex items-start">
-              {PIPELINE.map((step, i) => {
-                const done = step.statuses.includes(app.status)
-                return (
-                  <div key={step.label} className="flex items-center flex-1">
-                    <div className="flex flex-col items-center">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold"
-                        style={{ background: done ? '#fff' : 'rgba(255,255,255,0.2)', color: done ? SC(app.status) : 'rgba(255,255,255,0.4)' }}>
-                        {done ? <CheckCircle2 size={11} /> : i + 1}
-                      </div>
-                      <span className="text-[9px] font-semibold mt-1 whitespace-nowrap"
-                        style={{ color: done ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)' }}>{step.label}</span>
-                    </div>
-                    {i < PIPELINE.length - 1 && (
-                      <div className="h-px flex-1 mx-1.5 mb-4 rounded"
-                        style={{ background: PIPELINE[i+1].statuses.includes(app.status) ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.2)' }} />
-                    )}
-                  </div>
-                )
-              })}
+          {/* ── Official Seals Footer ── */}
+          <div className="px-4 sm:px-5 py-3 flex flex-wrap items-center gap-x-4 gap-y-1.5"
+            style={{ background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: '#475569' }}>
+              <Shield size={11} style={{ color: '#16A34A' }} /> Federally Recognized Nonprofit
             </div>
-          )}
+            <div className="hidden sm:block w-px h-3 bg-slate-200" />
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: '#475569' }}>
+              <CheckCircle2 size={11} style={{ color: '#2563EB' }} /> IRS Tax-Exempt 501(c)(3)
+            </div>
+            <div className="hidden sm:block w-px h-3 bg-slate-200" />
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: '#475569' }}>
+              <Lock size={11} style={{ color: '#7C3AED' }} /> 256-bit SSL Encrypted
+            </div>
+            <div className="ml-auto font-mono text-[10px]" style={{ color: '#CBD5E1' }}>{app.app_number}</div>
+          </div>
         </div>
       </motion.div>
 
