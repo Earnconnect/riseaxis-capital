@@ -324,7 +324,7 @@ export default function ApplicationDetailPage() {
       <AnimatePresence mode="wait">
         <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
 
-          {tab === 'overview'     && <OverviewTab app={app} />}
+          {tab === 'overview'     && <OverviewTab app={app} milestones={milestones} />}
           {tab === 'documents'    && <DocumentsTab app={app} docs={docs} setDocs={setDocs} user={user} profile={profile} />}
           {tab === 'messages'     && <MessagesTab app={app} messages={messages} setMessages={setMessages} user={user} profile={profile} />}
           {tab === 'milestones'   && <MilestonesTab milestones={milestones} />}
@@ -338,7 +338,10 @@ export default function ApplicationDetailPage() {
 }
 
 /* ── Overview Tab ───────────────────────────────── */
-function OverviewTab({ app }: { app: GrantApplication }) {
+function OverviewTab({ app, milestones }: { app: GrantApplication; milestones: Milestone[] }) {
+  const completedMs = milestones.filter(m => m.completed).length
+  const pct = milestones.length > 0 ? Math.round((completedMs / milestones.length) * 100) : 0
+
   return (
     <div className="space-y-5">
       {/* Rejection notice */}
@@ -432,6 +435,66 @@ function OverviewTab({ app }: { app: GrantApplication }) {
               <p className="text-xs font-semibold" style={{ color: T.head }}>{value}</p>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Milestone Tracker Summary */}
+      <div className="rounded-2xl overflow-hidden" style={{ boxShadow: T.card }}>
+        <div className="p-4 sm:p-5 flex items-center justify-between gap-3"
+          style={{ background: 'linear-gradient(135deg, #0C1A36 0%, #1E3A5F 100%)' }}>
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              Milestone Tracking
+            </div>
+            <div className="text-white font-bold text-sm">Application Milestones</div>
+          </div>
+          <div className="text-right shrink-0">
+            <div className="text-2xl font-black text-white">{pct}%</div>
+            <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              {completedMs}/{milestones.length} done
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-5" style={{ background: T.white }}>
+          {milestones.length === 0 ? (
+            <p className="text-xs text-center py-4" style={{ color: T.muted }}>
+              No milestones assigned yet. Our team will add them as your application progresses.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {/* Progress bar */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-2.5 rounded-full" style={{ background: T.border }}>
+                  <div className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#16A34A,#22C55E)' }} />
+                </div>
+                <span className="text-xs font-bold whitespace-nowrap" style={{ color: T.green }}>{pct}%</span>
+              </div>
+              {milestones.map((m, i) => (
+                <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl"
+                  style={{ background: m.completed ? T.greenLt : '#F8FAFC', border: `1px solid ${m.completed ? T.greenBd : T.border}` }}>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: m.completed ? T.green : T.border }}>
+                    {m.completed
+                      ? <CheckCircle2 size={12} className="text-white" />
+                      : <span className="text-[10px] font-black" style={{ color: T.muted }}>{i + 1}</span>
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold truncate" style={{ color: T.head }}>{m.title}</p>
+                    {m.completed && m.completed_at && (
+                      <p className="text-[10px]" style={{ color: T.green }}>✓ {formatDateShort(m.completed_at)}</p>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-bold shrink-0"
+                    style={{ color: m.completed ? T.green : '#D97706' }}>
+                    {m.completed ? 'Done' : 'Pending'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -769,80 +832,135 @@ function MessagesTab({ app, messages, setMessages, user, profile }: {
 
 /* ── Milestones Tab ─────────────────────────────── */
 function MilestonesTab({ milestones }: { milestones: Milestone[] }) {
-  return (
-    <div className="rounded-2xl p-6" style={{ background: T.white, boxShadow: T.card }}>
-      <div className="flex items-center gap-2.5 mb-5">
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: '#FFFBEB' }}>
-          <Star size={15} style={{ color: '#D97706' }} />
-        </div>
-        <div>
-          <h2 className="text-sm font-bold" style={{ color: T.head }}>Application Milestones</h2>
-          <p className="text-xs" style={{ color: T.muted }}>Set and tracked by our review team</p>
-        </div>
-      </div>
+  const completed = milestones.filter(m => m.completed).length
+  const pct = milestones.length > 0 ? Math.round((completed / milestones.length) * 100) : 0
 
-      {milestones.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center" style={{ background: T.greenLt }}>
-            <CheckSquare size={20} style={{ color: T.green }} />
-          </div>
-          <p className="text-sm font-semibold mb-1" style={{ color: T.head }}>No milestones yet</p>
-          <p className="text-xs" style={{ color: T.muted }}>
-            Our team will add milestones as your application progresses through review.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-0">
-          {milestones.map((m, i) => (
-            <div key={m.id} className="flex gap-4">
-              <div className="flex flex-col items-center">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: m.completed ? T.greenLt : '#F8FAFC', border: `1px solid ${m.completed ? T.greenBd : T.border}` }}>
-                  {m.completed
-                    ? <CheckCircle2 size={16} style={{ color: T.green }} />
-                    : <Clock size={16} style={{ color: T.muted }} />
-                  }
-                </div>
-                {i < milestones.length - 1 && <div className="w-px flex-1 my-1.5" style={{ background: T.border }} />}
+  return (
+    <div className="space-y-5">
+
+      {/* Official header card */}
+      <div className="rounded-2xl overflow-hidden" style={{ boxShadow: T.card }}>
+        <div className="p-4 sm:p-5" style={{ background: 'linear-gradient(135deg, #0C1A36 0%, #1E3A5F 100%)' }}>
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                Official Milestone Tracking
               </div>
-              <div className="pb-5 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-bold" style={{ color: T.head }}>{m.title}</p>
-                    {m.description && <p className="text-xs leading-relaxed mt-0.5" style={{ color: T.body }}>{m.description}</p>}
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
-                    style={{
-                      background: m.completed ? T.greenLt : '#F8FAFC',
-                      color: m.completed ? T.green : T.muted,
-                      border: `1px solid ${m.completed ? T.greenBd : T.border}`,
-                    }}>
-                    {m.completed ? 'Completed' : 'Pending'}
-                  </span>
-                </div>
-                {m.completed && m.completed_at && (
-                  <p className="text-[10px] mt-1.5 flex items-center gap-1" style={{ color: T.muted }}>
-                    <CheckCircle2 size={9} /> {formatDateShort(m.completed_at)}
-                  </p>
-                )}
-                <p className="text-[10px] mt-0.5" style={{ color: T.muted }}>Added {formatDateShort(m.created_at)}</p>
+              <div className="text-white font-bold text-base">Application Milestones</div>
+              <div className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                Set and verified by the RiseAxis Capital review team
               </div>
             </div>
-          ))}
-        </div>
-      )}
-
-      {milestones.length > 0 && (
-        <div className="mt-4 pt-4 flex items-center gap-3" style={{ borderTop: `1px solid ${T.border}` }}>
-          <div className="flex-1 h-2 rounded-full" style={{ background: T.border }}>
-            <div className="h-full rounded-full transition-all"
-              style={{ width: `${(milestones.filter(m => m.completed).length / milestones.length) * 100}%`, background: 'linear-gradient(90deg,#16A34A,#22C55E)' }} />
+            {milestones.length > 0 && (
+              <div className="text-right shrink-0">
+                <div className="text-2xl font-black text-white">{pct}%</div>
+                <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Complete</div>
+              </div>
+            )}
           </div>
-          <span className="text-xs font-bold whitespace-nowrap" style={{ color: T.green }}>
-            {milestones.filter(m => m.completed).length}/{milestones.length} Complete
-          </span>
+          {milestones.length > 0 && (
+            <>
+              <div className="h-2 rounded-full mb-2" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                <div className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #16A34A, #4ADE80)' }} />
+              </div>
+              <div className="flex items-center justify-between text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                <span>{completed} of {milestones.length} milestones completed</span>
+                <span>{milestones.length - completed} remaining</span>
+              </div>
+            </>
+          )}
         </div>
-      )}
+
+        {/* Stats strip */}
+        {milestones.length > 0 && (
+          <div className="grid grid-cols-3 divide-x" style={{ background: T.white, borderBottom: `1px solid ${T.border}`, divideColor: T.border }}>
+            {[
+              { label: 'Total',     value: milestones.length,              color: T.head },
+              { label: 'Completed', value: completed,                       color: T.green },
+              { label: 'Pending',   value: milestones.length - completed,   color: '#D97706' },
+            ].map(s => (
+              <div key={s.label} className="py-3 text-center" style={{ borderRight: `1px solid ${T.border}` }}>
+                <div className="text-lg font-black" style={{ color: s.color }}>{s.value}</div>
+                <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: T.muted }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Timeline */}
+        <div className="p-4 sm:p-5" style={{ background: T.white }}>
+          {milestones.length === 0 ? (
+            <div className="text-center py-10">
+              <div className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center" style={{ background: T.greenLt }}>
+                <CheckSquare size={20} style={{ color: T.green }} />
+              </div>
+              <p className="text-sm font-semibold mb-1" style={{ color: T.head }}>No milestones yet</p>
+              <p className="text-xs" style={{ color: T.muted }}>
+                Our team will add milestones as your application progresses through review.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-0">
+              {milestones.map((m, i) => (
+                <div key={m.id} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all"
+                      style={{
+                        background: m.completed ? T.green : '#F8FAFC',
+                        border: `1px solid ${m.completed ? T.green : T.border}`,
+                        boxShadow: m.completed ? `0 4px 12px ${T.green}40` : 'none',
+                      }}>
+                      {m.completed
+                        ? <CheckCircle2 size={16} className="text-white" />
+                        : <span className="text-[11px] font-black" style={{ color: T.muted }}>{i + 1}</span>
+                      }
+                    </div>
+                    {i < milestones.length - 1 && (
+                      <div className="w-0.5 flex-1 my-1.5 rounded-full"
+                        style={{ background: m.completed ? T.greenBd : T.border }} />
+                    )}
+                  </div>
+                  <div className="pb-5 flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold" style={{ color: T.head }}>{m.title}</p>
+                        {m.description && (
+                          <p className="text-xs leading-relaxed mt-0.5" style={{ color: T.body }}>{m.description}</p>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap"
+                        style={{
+                          background: m.completed ? T.greenLt : '#FFF7ED',
+                          color: m.completed ? T.green : '#D97706',
+                          border: `1px solid ${m.completed ? T.greenBd : '#FDE68A'}`,
+                        }}>
+                        {m.completed ? '✓ Completed' : '⏳ Pending'}
+                      </span>
+                    </div>
+                    {m.completed && m.completed_at && (
+                      <p className="text-[10px] mt-1.5 flex items-center gap-1 font-semibold" style={{ color: T.green }}>
+                        <CheckCircle2 size={9} /> Completed {formatDateShort(m.completed_at)}
+                      </p>
+                    )}
+                    <p className="text-[10px] mt-0.5" style={{ color: T.muted }}>Added {formatDateShort(m.created_at)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Official footer */}
+        <div className="px-4 sm:px-5 py-3 flex flex-wrap items-center gap-3"
+          style={{ background: '#F8FAFC', borderTop: `1px solid ${T.border}` }}>
+          <Shield size={10} style={{ color: T.green }} />
+          <span className="text-[10px] font-medium" style={{ color: '#64748B' }}>
+            Milestones are set and verified exclusively by the RiseAxis Capital review team
+          </span>
+          <span className="ml-auto text-[10px] font-mono" style={{ color: '#CBD5E1' }}>EIN: 27-0964813</span>
+        </div>
+      </div>
     </div>
   )
 }
