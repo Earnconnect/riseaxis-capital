@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(timeout 15 npx vite --port 5174)",
+      "Bash(npx vite *)",
+      "Bash(curl -s http://localhost:5176/)",
+      "Read(//c/Users/LIBERTY/Documents/Completed Projects/RiseAxisCapital/**)"
+    ]
+  }
+}
