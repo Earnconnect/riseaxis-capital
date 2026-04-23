@@ -228,7 +228,7 @@ export default function AdminLayout() {
       </AnimatePresence>
 
       {/* Main */}
-      <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
+      <div className="flex-1 md:ml-64 flex flex-col min-h-screen min-w-0 overflow-x-hidden">
 
         {/* Top header */}
         <header className="sticky top-0 z-30 flex items-center gap-4 h-16 px-5 lg:px-8"
