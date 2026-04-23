@@ -358,8 +358,8 @@ export default function NotificationSettingsPage() {
               <p className="text-xs text-red-500 mt-0.5">Irreversible and destructive actions</p>
             </div>
           </div>
-          <div className="flex items-center justify-between gap-4">
-            <div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex-1">
               <div className="text-sm font-semibold text-red-800">Delete Account</div>
               <p className="text-xs text-red-500 mt-0.5">
                 Permanently delete your account and all application data. This cannot be undone.

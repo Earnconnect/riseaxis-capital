@@ -185,7 +185,7 @@ export default function ContactPage() {
           {/* ── Right: Contact Form ───────────────────────── */}
           <div className="lg:col-span-2">
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
-              className="rounded-2xl p-8"
+              className="rounded-2xl p-5 sm:p-8"
               style={{ background: G.white, border: `1px solid ${G.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
 
               {sent ? (
@@ -258,13 +258,13 @@ export default function ContactPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between gap-4 pt-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
                     <p className="text-xs" style={{ color: G.muted }}>
                       By submitting, you agree to our{' '}
                       <Link to="/privacy" className="underline hover:text-slate-600">Privacy Policy</Link>.
                     </p>
                     <button type="submit" disabled={sending}
-                      className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all hover:brightness-105 disabled:opacity-50 shrink-0"
+                      className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all hover:brightness-105 disabled:opacity-50 shrink-0"
                       style={{ background: 'linear-gradient(135deg, #16A34A, #15803D)', boxShadow: '0 4px 14px rgba(22,163,74,0.25)' }}>
                       {sending ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</> : <><Send size={14} /> Send Message</>}
                     </button>

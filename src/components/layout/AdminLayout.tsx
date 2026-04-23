@@ -266,7 +266,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 pb-16 md:pb-0">
+        <main className="flex-1">
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: 10 }}
@@ -276,45 +276,6 @@ export default function AdminLayout() {
           </motion.div>
         </main>
       </div>
-
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center bg-white"
-        style={{ borderTop: '1px solid #EDE9E3', boxShadow: '0 -4px 16px rgba(0,0,0,0.06)' }}>
-        {[
-          { to: '/admin',              icon: LayoutDashboard, label: 'Overview',  exact: true },
-          { to: '/admin/applications', icon: FileText,         label: 'Apps',      exact: false },
-          { to: '/admin/payments',     icon: CreditCard,       label: 'Payments',  exact: false },
-          { to: '/admin/payments/new', icon: ShieldCheck,      label: 'Receipt',   exact: true,  highlight: true },
-        ].map(({ to, icon: Icon, label, exact, highlight }) => {
-          const active = isActive(to, exact)
-          return (
-            <Link key={to} to={to}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 relative transition-all"
-              style={{ color: active ? '#8B5CF6' : '#94A3B8' }}>
-              {active && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-violet-500" />}
-              {highlight && !active ? (
-                <div className="w-10 h-10 -mt-5 rounded-2xl flex items-center justify-center shadow-lg"
-                  style={{ background: 'linear-gradient(135deg,#8B5CF6,#7C3AED)', boxShadow: '0 4px 14px rgba(139,92,246,0.35)' }}>
-                  <Icon size={18} className="text-white" />
-                </div>
-              ) : (
-                <div className="relative">
-                  <Icon size={18} strokeWidth={active ? 2.5 : 2} />
-                  {label === 'Apps' && pendingCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-black text-white"
-                      style={{ background: '#EF4444' }}>
-                      {pendingCount > 9 ? '9' : pendingCount}
-                    </span>
-                  )}
-                </div>
-              )}
-              <span className={`text-[9px] font-semibold leading-none ${highlight && !active ? 'mt-1' : ''}`}>
-                {label}
-              </span>
-            </Link>
-          )
-        })}
-      </nav>
     </div>
   )
 }

@@ -138,7 +138,7 @@ export default function VerifyReceiptPage() {
 
               {/* Header bar */}
               <div className="p-6" style={{ background: G.navy, borderBottom: `1px solid rgba(255,255,255,0.08)` }}>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <img src="/logo.png" alt="RiseAxis Capital" className="w-10 h-10 object-cover rounded-xl" />
                     <div>
@@ -146,9 +146,9 @@ export default function VerifyReceiptPage() {
                       <div className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Official Proof of Payment</div>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="sm:text-right">
                     <div className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Transaction ID</div>
-                    <div className="font-mono text-green-400 font-semibold text-sm">{receipt.transaction_id}</div>
+                    <div className="font-mono text-green-400 font-semibold text-sm break-all">{receipt.transaction_id}</div>
                   </div>
                 </div>
               </div>

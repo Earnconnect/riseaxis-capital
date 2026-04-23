@@ -80,7 +80,7 @@ export default function ViewReceiptPage() {
 
           {/* Header bar */}
           <div className="p-6" style={{ background: 'linear-gradient(135deg, #0C1A36, #071828)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
                 <img src="/logo.png" alt="RiseAxis Capital" className="w-10 h-10 object-cover rounded-xl" />
                 <div>
@@ -88,9 +88,9 @@ export default function ViewReceiptPage() {
                   <div className="text-xs text-white/50">Official Proof of Payment</div>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="sm:text-right">
                 <div className="text-xs text-white/40">Transaction ID</div>
-                <div className="font-mono text-white font-semibold text-sm">{receipt.transaction_id}</div>
+                <div className="font-mono text-white font-semibold text-sm break-all">{receipt.transaction_id}</div>
               </div>
             </div>
           </div>
@@ -149,7 +149,7 @@ export default function ViewReceiptPage() {
             </div>
 
             {/* Footer */}
-            <div className="pt-5 flex items-center justify-between text-xs text-white/30"
+            <div className="pt-5 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3 text-xs text-white/30"
               style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
               <div>
                 <div className="flex items-center gap-1.5 mb-1">
@@ -158,9 +158,9 @@ export default function ViewReceiptPage() {
                 </div>
                 <div>3040 Idaho Ave NW, Washington, DC 20016</div>
               </div>
-              <div className="text-right">
+              <div className="sm:text-right">
                 <div>Verify at:</div>
-                <div className="font-medium text-white/50">/verify/{receipt.transaction_id}</div>
+                <div className="font-medium text-white/50 break-all">/verify/{receipt.transaction_id}</div>
               </div>
             </div>
           </div>

@@ -292,7 +292,7 @@ export default function UserLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 pb-16 md:pb-0">
+        <main className="flex-1">
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: 10 }}
@@ -302,46 +302,6 @@ export default function UserLayout() {
           </motion.div>
         </main>
       </div>
-
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center bg-white"
-        style={{ borderTop: '1px solid #EDE9E3', boxShadow: '0 -4px 16px rgba(0,0,0,0.06)' }}>
-        {[
-          { to: '/dashboard',     icon: LayoutDashboard, label: 'Home',     exact: true },
-          { to: '/applications',  icon: ClipboardList,   label: 'Apps',     exact: false },
-          { to: '/apply',         icon: Plus,            label: 'Apply',    exact: true,  highlight: true },
-          { to: '/apply/chat',    icon: MessageSquare,   label: 'AI Chat',  exact: false },
-          { to: '/notifications', icon: Bell,            label: 'Alerts',   exact: false },
-        ].map(({ to, icon: Icon, label, exact, highlight }) => {
-          const active = isActive(to, exact)
-          return (
-            <Link key={to} to={to}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 relative transition-all"
-              style={{ color: active ? '#16A34A' : '#94A3B8' }}>
-              {active && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-green-500" />}
-              {highlight && !active ? (
-                <div className="w-10 h-10 -mt-5 rounded-2xl flex items-center justify-center shadow-lg"
-                  style={{ background: 'linear-gradient(135deg,#16A34A,#15803D)', boxShadow: '0 4px 14px rgba(22,163,74,0.35)' }}>
-                  <Icon size={18} className="text-white" />
-                </div>
-              ) : (
-                <div className="relative">
-                  <Icon size={18} strokeWidth={active ? 2.5 : 2} />
-                  {to === '/notifications' && unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-black text-white"
-                      style={{ background: '#DC2626' }}>
-                      {unreadCount > 9 ? '9' : unreadCount}
-                    </span>
-                  )}
-                </div>
-              )}
-              <span className={`text-[9px] font-semibold leading-none ${highlight && !active ? 'mt-1' : ''}`}>
-                {label}
-              </span>
-            </Link>
-          )
-        })}
-      </nav>
     </div>
   )
 }

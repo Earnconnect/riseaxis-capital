@@ -96,8 +96,8 @@ How can I help you today?`,
   }
 
   return (
-    <div className="max-w-[1440px] mx-auto px-5 lg:px-8 py-8">
-      <div className="max-w-3xl mx-auto h-[calc(100svh-7rem)] sm:h-[calc(100vh-8rem)] flex flex-col gap-4">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-5 lg:px-8 py-4 sm:py-8">
+      <div className="max-w-3xl mx-auto h-[calc(100svh-6.5rem)] sm:h-[calc(100vh-8rem)] flex flex-col gap-3 sm:gap-4">
 
         {/* Header card */}
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
