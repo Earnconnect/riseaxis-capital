@@ -1,6 +1,13 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import { AuthProvider } from '@/contexts/AuthContext'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  return null
+}
 
 // Layouts
 import PublicLayout from '@/components/layout/PublicLayout'
@@ -41,6 +48,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ScrollToTop />
         <Routes>
           {/* Public routes */}
           <Route element={<PublicLayout />}>
