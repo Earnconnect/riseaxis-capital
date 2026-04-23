@@ -97,7 +97,7 @@ export default function MyApplicationsPage() {
   }
 
   return (
-    <div className="max-w-[1440px] mx-auto px-5 lg:px-8 py-8 space-y-6">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-5 lg:px-8 py-6 sm:py-8 space-y-6">
 
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
@@ -227,7 +227,7 @@ export default function MyApplicationsPage() {
                       )}
                     </p>
                   </div>
-                  <div className="text-right shrink-0 hidden xs:block sm:block">
+                  <div className="text-right shrink-0 hidden sm:block">
                     <p className="text-sm font-bold" style={{ color: T.head }}>{formatCurrency(app.requested_amount)}</p>
                     {app.approved_amount && app.approved_amount !== app.requested_amount && (
                       <p className="text-xs" style={{ color: T.green }}>✓ {formatCurrency(app.approved_amount)}</p>
@@ -245,7 +245,7 @@ export default function MyApplicationsPage() {
                       initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22 }}
                       className="overflow-hidden">
-                      <div className="px-5 pb-5 space-y-5" style={{ borderTop: `1px solid ${T.border}` }}>
+                      <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-5" style={{ borderTop: `1px solid ${T.border}` }}>
 
                         {/* Application pipeline */}
                         {app.status !== 'rejected' && (

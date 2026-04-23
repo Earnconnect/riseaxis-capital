@@ -140,7 +140,7 @@ export default function ApplicationDetailPage() {
   ]
 
   return (
-    <div className="max-w-[1440px] mx-auto px-5 lg:px-8 py-8 space-y-5">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-5 lg:px-8 py-6 sm:py-8 space-y-5">
 
       {/* Back + Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
@@ -447,7 +447,7 @@ function DocumentsTab({ app, docs, setDocs, user, profile }: {
           onDragLeave={() => setDragging(false)}
           onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files) }}
           onClick={() => fileRef.current?.click()}
-          className="flex flex-col items-center justify-center p-10 rounded-2xl cursor-pointer transition-all"
+          className="flex flex-col items-center justify-center p-6 sm:p-10 rounded-2xl cursor-pointer transition-all"
           style={{
             background: dragging ? T.greenLt : '#F8FAFC',
             border: `2px dashed ${dragging ? T.green : T.border}`,
@@ -600,7 +600,7 @@ function MessagesTab({ app, messages, setMessages, user, profile }: {
   return (
     <div className="rounded-2xl overflow-hidden flex flex-col" style={{ background: T.white, boxShadow: T.card, height: 'calc(100svh - 18rem)', minHeight: '400px', maxHeight: '700px' }}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-6 py-4" style={{ borderBottom: `1px solid ${T.border}` }}>
+      <div className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4" style={{ borderBottom: `1px solid ${T.border}` }}>
         <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: T.greenLt }}>
           <MessageSquare size={15} style={{ color: T.green }} />
         </div>
@@ -615,7 +615,7 @@ function MessagesTab({ app, messages, setMessages, user, profile }: {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-4 space-y-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full">
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3" style={{ background: T.greenLt }}>
@@ -637,7 +637,7 @@ function MessagesTab({ app, messages, setMessages, user, profile }: {
                     : { background: '#EFF6FF', color: '#2563EB', fontSize: 10 }}>
                   {isUser ? (m.sender_name?.[0] || 'U') : 'S'}
                 </div>
-                <div className={`max-w-[75%] flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
+                <div className={`max-w-[85%] sm:max-w-[75%] flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
                   <div className="px-4 py-2.5 rounded-2xl text-sm leading-relaxed"
                     style={isUser
                       ? { background: 'linear-gradient(135deg,#16A34A,#15803D)', color: '#fff', borderTopRightRadius: '4px' }
@@ -1073,7 +1073,7 @@ function BankTab({ app, setApp }: { app: GrantApplication; setApp: React.Dispatc
 /* ── Loading State ──────────────────────────────── */
 function LoadingState() {
   return (
-    <div className="max-w-[1440px] mx-auto px-5 lg:px-8 py-8 space-y-5">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-5 lg:px-8 py-6 sm:py-8 space-y-5">
       <div className="h-8 w-40 rounded-xl animate-pulse" style={{ background: '#EDE9E3' }} />
       <div className="h-40 rounded-2xl animate-pulse" style={{ background: '#EDE9E3' }} />
       <div className="flex gap-2">
