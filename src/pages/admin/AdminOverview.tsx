@@ -125,7 +125,7 @@ export default function AdminOverview() {
     <div className="max-w-[1440px] mx-auto px-5 lg:px-8 py-8 space-y-6">
 
       {/* ── Page Header ─────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <div className="text-[11px] font-bold uppercase tracking-widest mb-1" style={{ color: T.green }}>
             Administration
@@ -136,7 +136,7 @@ export default function AdminOverview() {
           </p>
         </motion.div>
         <button onClick={fetchData}
-          className="flex items-center gap-1.5 text-[13px] font-medium px-4 py-2 rounded-full transition-all hover:bg-slate-100"
+          className="self-start flex items-center gap-1.5 text-[13px] font-medium px-4 py-2 rounded-full transition-all hover:bg-slate-100"
           style={{ color: T.sub, border: `1px solid ${T.border}` }}>
           <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
         </button>
@@ -385,13 +385,54 @@ export default function AdminOverview() {
         </CardBase>
       </div>
 
-      {/* ── Program Performance Table ─────────────────────────── */}
+      {/* ── Program Performance ──────────────────────────────── */}
       <CardBase className="overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${T.border}`, background: '#F8FAFC' }}>
           <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#6366F1' }}>Program Performance Summary</span>
-          <span className="text-[10px] font-medium" style={{ color: T.muted }}>Fiscal Year 2025–2026</span>
+          <span className="text-[10px] font-medium" style={{ color: T.muted }}>FY 2025–2026</span>
         </div>
-        <div className="overflow-x-auto">
+
+        {/* Mobile cards */}
+        <div className="md:hidden divide-y" style={{ borderColor: T.border }}>
+          {[
+            { prog: 'emergency_assistance',  label: 'Emergency Assistance' },
+            { prog: 'education_support',     label: 'Education Support' },
+            { prog: 'medical_expenses',      label: 'Medical Expenses' },
+            { prog: 'community_development', label: 'Community Development' },
+            { prog: 'business_funding',      label: 'Business Funding' },
+            { prog: 'other',                 label: 'Other Needs' },
+          ].map(({ prog, label }) => {
+            const pa   = apps.filter(a => a.grant_program === prog)
+            const pr   = pa.filter(a => ['approved','disbursed'].includes(a.status))
+            const px   = pa.filter(a => a.status === 'rejected')
+            const pd   = pa.filter(a => a.status === 'disbursed').reduce((s,a) => s+(a.approved_amount||0),0)
+            const pavg = pr.length ? pr.reduce((s,a)=>s+(a.approved_amount||0),0)/pr.length : 0
+            return (
+              <div key={prog} className="px-4 py-3.5">
+                <div className="font-semibold text-sm mb-2" style={{ color: T.heading }}>{label}</div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: 'Total', val: pa.length, color: T.sub },
+                    { label: 'Approved', val: `${pr.length}${pa.length > 0 ? ` (${Math.round(pr.length/pa.length*100)}%)` : ''}`, color: T.green },
+                    { label: 'Rejected', val: px.length, color: '#EF4444' },
+                  ].map(c => (
+                    <div key={c.label} className="text-center p-2 rounded-xl" style={{ background: '#F8FAFC', border: `1px solid ${T.border}` }}>
+                      <div className="text-[11px] font-bold" style={{ color: c.color }}>{c.val}</div>
+                      <div className="text-[9px]" style={{ color: T.muted }}>{c.label}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center gap-3 mt-2">
+                  <span className="text-[11px]" style={{ color: T.muted }}>Disbursed: <span className="font-semibold" style={{ color: T.heading }}>{formatCurrency(pd)}</span></span>
+                  <span className="text-[11px]" style={{ color: T.muted }}>Avg: <span className="font-semibold" style={{ color: T.heading }}>{pavg > 0 ? formatCurrency(pavg) : '—'}</span></span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr style={{ borderBottom: `1px solid ${T.border}`, background: '#F8FAFC' }}>

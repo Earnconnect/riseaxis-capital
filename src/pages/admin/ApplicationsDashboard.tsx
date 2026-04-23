@@ -112,18 +112,18 @@ export default function ApplicationsDashboard() {
       </div>
 
       {/* Filter bar */}
-      <div className="rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center"
+      <div className="rounded-2xl p-4 space-y-3"
         style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
 
-        {/* Tab pills */}
-        <div className="flex gap-1 p-1 rounded-xl flex-wrap"
+        {/* Tab pills — horizontal scroll on mobile */}
+        <div className="flex gap-1 p-1 rounded-xl overflow-x-auto hide-scrollbar"
           style={{ background: '#F1F5F9' }}>
           {STATUS_TABS.map(t => {
             const isActive = tab === t.key
             const count = t.key !== 'all' ? counts[t.key as keyof typeof counts] : null
             return (
               <button key={t.key} onClick={() => setTab(t.key)}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap"
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0"
                 style={isActive
                   ? { background: T.heading, color: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }
                   : { color: T.sub }}>
@@ -138,26 +138,27 @@ export default function ApplicationsDashboard() {
           })}
         </div>
 
-        {/* Search */}
-        <div className="relative flex-1 min-w-0 w-full sm:w-auto">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: T.muted }} />
-          <input
-            placeholder="Search name, application number, email…"
-            className="w-full h-9 pl-9 pr-4 rounded-xl text-sm outline-none transition-all"
-            style={{ background: '#F8FAFC', border: `1px solid ${T.border}`, color: T.heading }}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            onFocus={e => { e.currentTarget.style.borderColor = '#16A34A'; e.currentTarget.style.background = '#fff' }}
-            onBlur={e  => { e.currentTarget.style.borderColor = T.border;  e.currentTarget.style.background = '#F8FAFC' }}
-          />
-        </div>
-
-        <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: T.muted }}>
-          <Filter size={12} /> {filtered.length} result{filtered.length !== 1 ? 's' : ''}
+        <div className="flex gap-3 items-center">
+          {/* Search */}
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: T.muted }} />
+            <input
+              placeholder="Search name, app number, email…"
+              className="w-full h-9 pl-9 pr-4 rounded-xl text-sm outline-none transition-all"
+              style={{ background: '#F8FAFC', border: `1px solid ${T.border}`, color: T.heading }}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onFocus={e => { e.currentTarget.style.borderColor = '#16A34A'; e.currentTarget.style.background = '#fff' }}
+              onBlur={e  => { e.currentTarget.style.borderColor = T.border;  e.currentTarget.style.background = '#F8FAFC' }}
+            />
+          </div>
+          <div className="flex items-center gap-1.5 text-xs font-medium shrink-0" style={{ color: T.muted }}>
+            <Filter size={12} /> {filtered.length}
+          </div>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table / Cards */}
       <div className="rounded-2xl overflow-hidden"
         style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
         {loading ? (
@@ -184,45 +185,80 @@ export default function ApplicationsDashboard() {
             <p className="text-xs mt-1" style={{ color: T.muted }}>Try adjusting the search or status filter</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[680px]">
-              <thead>
-                <tr style={{ borderBottom: `1px solid ${T.border}`, background: '#F8FAFC' }}>
-                  {['App Number','Applicant','Program','Requested','Status','Date',''].map(h => (
-                    <th key={h} className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest" style={{ color: T.muted }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((app, i) => (
-                  <tr key={app.id} className="group transition-colors hover:bg-slate-50"
-                    style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${T.border}` : 'none' }}>
-                    <td className="px-5 py-3.5">
-                      <span className="font-mono text-[11px] px-2 py-1 rounded-lg"
-                        style={{ background: '#F1F5F9', color: T.sub }}>
-                        {app.app_number}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <div className="font-semibold text-sm" style={{ color: T.heading }}>{app.full_name}</div>
-                      <div className="text-xs mt-0.5" style={{ color: T.muted }}>{app.email}</div>
-                    </td>
-                    <td className="px-5 py-3.5 text-sm" style={{ color: T.sub }}>{getGrantProgramLabel(app.grant_program)}</td>
-                    <td className="px-5 py-3.5 font-bold text-sm" style={{ color: T.heading }}>{formatCurrency(app.requested_amount)}</td>
-                    <td className="px-5 py-3.5"><Badge variant={statusVariant(app.status)}>{getStatusLabel(app.status)}</Badge></td>
-                    <td className="px-5 py-3.5 text-xs" style={{ color: T.muted }}>{formatDateShort(app.created_at)}</td>
-                    <td className="px-5 py-3.5">
-                      <Link to={`/admin/applications/${app.id}`}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs font-semibold"
-                        style={{ color: T.green }}>
-                        Review <ChevronRight className="w-3.5 h-3.5" />
-                      </Link>
-                    </td>
+          <>
+            {/* Mobile card list (hidden md+) */}
+            <div className="md:hidden">
+              {filtered.map((app, i) => (
+                <Link key={app.id} to={`/admin/applications/${app.id}`}
+                  className="flex items-start gap-3 px-4 py-4 transition-colors active:bg-slate-50"
+                  style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${T.border}` : 'none' }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                    style={{ background: '#EFF6FF' }}>
+                    <FileText size={14} style={{ color: '#3B82F6' }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                      <span className="font-mono text-[10px] px-1.5 py-0.5 rounded"
+                        style={{ background: '#F1F5F9', color: T.muted }}>{app.app_number}</span>
+                      <Badge variant={statusVariant(app.status)} className="text-[10px]">{getStatusLabel(app.status)}</Badge>
+                    </div>
+                    <div className="font-semibold text-sm truncate" style={{ color: T.heading }}>{app.full_name}</div>
+                    <div className="text-xs mt-0.5 truncate" style={{ color: T.muted }}>{app.email}</div>
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <span className="text-xs" style={{ color: T.sub }}>{getGrantProgramLabel(app.grant_program)}</span>
+                      <span style={{ color: T.muted }}>·</span>
+                      <span className="text-xs font-bold" style={{ color: T.heading }}>{formatCurrency(app.requested_amount)}</span>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-[10px]" style={{ color: T.muted }}>{formatDateShort(app.created_at)}</div>
+                    <ChevronRight size={14} className="mt-2 ml-auto" style={{ color: T.muted }} />
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Desktop table (hidden below md) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm min-w-[680px]">
+                <thead>
+                  <tr style={{ borderBottom: `1px solid ${T.border}`, background: '#F8FAFC' }}>
+                    {['App Number','Applicant','Program','Requested','Status','Date',''].map(h => (
+                      <th key={h} className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest" style={{ color: T.muted }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filtered.map((app, i) => (
+                    <tr key={app.id} className="group transition-colors hover:bg-slate-50"
+                      style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${T.border}` : 'none' }}>
+                      <td className="px-5 py-3.5">
+                        <span className="font-mono text-[11px] px-2 py-1 rounded-lg"
+                          style={{ background: '#F1F5F9', color: T.sub }}>
+                          {app.app_number}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="font-semibold text-sm" style={{ color: T.heading }}>{app.full_name}</div>
+                        <div className="text-xs mt-0.5" style={{ color: T.muted }}>{app.email}</div>
+                      </td>
+                      <td className="px-5 py-3.5 text-sm" style={{ color: T.sub }}>{getGrantProgramLabel(app.grant_program)}</td>
+                      <td className="px-5 py-3.5 font-bold text-sm" style={{ color: T.heading }}>{formatCurrency(app.requested_amount)}</td>
+                      <td className="px-5 py-3.5"><Badge variant={statusVariant(app.status)}>{getStatusLabel(app.status)}</Badge></td>
+                      <td className="px-5 py-3.5 text-xs" style={{ color: T.muted }}>{formatDateShort(app.created_at)}</td>
+                      <td className="px-5 py-3.5">
+                        <Link to={`/admin/applications/${app.id}`}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs font-semibold"
+                          style={{ color: T.green }}>
+                          Review <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

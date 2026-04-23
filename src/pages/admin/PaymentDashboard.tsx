@@ -55,14 +55,14 @@ export default function PaymentDashboard() {
     <div className="max-w-[1440px] mx-auto px-5 lg:px-8 py-8 space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <div className="text-[11px] font-bold uppercase tracking-widest mb-1" style={{ color: T.green }}>Administration</div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: T.heading }}>Payments</h1>
           <p className="text-sm mt-0.5" style={{ color: T.sub }}>Manage proof of payment receipts</p>
         </motion.div>
         <Link to="/admin/payments/new"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:brightness-105"
+          className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:brightness-105"
           style={{ background: 'linear-gradient(135deg, #16A34A, #15803D)', boxShadow: '0 4px 14px rgba(22,163,74,0.25)' }}>
           <Plus className="w-4 h-4" /> Create Receipt
         </Link>
@@ -138,47 +138,82 @@ export default function PaymentDashboard() {
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[640px]">
-              <thead>
-                <tr style={{ borderBottom: `1px solid ${T.border}`, background: '#F8FAFC' }}>
-                  {['Transaction ID','Recipient','Amount','Method','Status','Date',''].map(h => (
-                    <th key={h} className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest" style={{ color: T.muted }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((r, i) => (
-                  <tr key={r.id} className="group transition-colors hover:bg-slate-50"
-                    style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${T.border}` : 'none' }}>
-                    <td className="px-5 py-3.5">
-                      <span className="font-mono text-[11px] px-2 py-1 rounded-lg"
-                        style={{ background: '#F1F5F9', color: T.sub }}>
-                        {r.transaction_id}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <div className="font-semibold text-sm" style={{ color: T.heading }}>{r.recipient_name}</div>
-                      <div className="text-xs mt-0.5" style={{ color: T.muted }}>{r.recipient_email}</div>
-                    </td>
-                    <td className="px-5 py-3.5 font-bold text-sm" style={{ color: T.green }}>
-                      {formatCurrency(r.amount)}
-                    </td>
-                    <td className="px-5 py-3.5 text-sm" style={{ color: T.sub }}>{r.payment_method}</td>
-                    <td className="px-5 py-3.5"><Badge variant="approved">{r.status}</Badge></td>
-                    <td className="px-5 py-3.5 text-xs" style={{ color: T.muted }}>{formatDateShort(r.issued_at)}</td>
-                    <td className="px-5 py-3.5">
-                      <Link to={`/admin/payments/${r.id}`}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs font-semibold"
-                        style={{ color: T.green }}>
-                        <Eye className="w-3.5 h-3.5" /> View
-                      </Link>
-                    </td>
+          <>
+            {/* Mobile card list */}
+            <div className="md:hidden">
+              {filtered.map((r, i) => (
+                <Link key={r.id} to={`/admin/payments/${r.id}`}
+                  className="flex items-start gap-3 px-4 py-4 transition-colors active:bg-slate-50"
+                  style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${T.border}` : 'none' }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                    style={{ background: T.greenLt }}>
+                    <CreditCard size={14} style={{ color: T.green }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <span className="font-mono text-[10px] px-1.5 py-0.5 rounded"
+                        style={{ background: '#F1F5F9', color: T.sub }}>{r.transaction_id}</span>
+                      <Badge variant="approved" className="text-[10px]">{r.status}</Badge>
+                    </div>
+                    <div className="font-semibold text-sm truncate" style={{ color: T.heading }}>{r.recipient_name}</div>
+                    <div className="text-xs truncate" style={{ color: T.muted }}>{r.recipient_email}</div>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className="text-sm font-bold" style={{ color: T.green }}>{formatCurrency(r.amount)}</span>
+                      <span style={{ color: T.muted }}>·</span>
+                      <span className="text-xs" style={{ color: T.sub }}>{r.payment_method}</span>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-[10px]" style={{ color: T.muted }}>{formatDateShort(r.issued_at)}</div>
+                    <Eye size={13} className="mt-2 ml-auto" style={{ color: T.muted }} />
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm min-w-[640px]">
+                <thead>
+                  <tr style={{ borderBottom: `1px solid ${T.border}`, background: '#F8FAFC' }}>
+                    {['Transaction ID','Recipient','Amount','Method','Status','Date',''].map(h => (
+                      <th key={h} className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest" style={{ color: T.muted }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filtered.map((r, i) => (
+                    <tr key={r.id} className="group transition-colors hover:bg-slate-50"
+                      style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${T.border}` : 'none' }}>
+                      <td className="px-5 py-3.5">
+                        <span className="font-mono text-[11px] px-2 py-1 rounded-lg"
+                          style={{ background: '#F1F5F9', color: T.sub }}>
+                          {r.transaction_id}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="font-semibold text-sm" style={{ color: T.heading }}>{r.recipient_name}</div>
+                        <div className="text-xs mt-0.5" style={{ color: T.muted }}>{r.recipient_email}</div>
+                      </td>
+                      <td className="px-5 py-3.5 font-bold text-sm" style={{ color: T.green }}>
+                        {formatCurrency(r.amount)}
+                      </td>
+                      <td className="px-5 py-3.5 text-sm" style={{ color: T.sub }}>{r.payment_method}</td>
+                      <td className="px-5 py-3.5"><Badge variant="approved">{r.status}</Badge></td>
+                      <td className="px-5 py-3.5 text-xs" style={{ color: T.muted }}>{formatDateShort(r.issued_at)}</td>
+                      <td className="px-5 py-3.5">
+                        <Link to={`/admin/payments/${r.id}`}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs font-semibold"
+                          style={{ color: T.green }}>
+                          <Eye className="w-3.5 h-3.5" /> View
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

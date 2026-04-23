@@ -104,6 +104,10 @@
   .nav-item-active   { @apply bg-white text-page font-semibold shadow-md; }
   .nav-item-inactive { @apply text-white/65 hover:text-white hover:bg-white/10; }
 
+  /* ── Hide scrollbar (cross-browser) ─────────────────────── */
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+
   /* ── Progress gradient bar ───────────────────────────────── */
   .progress-gradient {
     background: linear-gradient(90deg, #22C55E 0%, #A3E635 60%, #FACC15 100%);

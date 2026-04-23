@@ -93,14 +93,14 @@ export default function UserDashboard() {
             {apps.length === 0 ? 'Welcome to your grant portal. Start your first application.' : `You have ${apps.length} application${apps.length !== 1 ? 's' : ''} on file.`}
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
           <Link to="/apply/chat"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
             style={{ background: T.white, border: `1px solid ${T.border}`, color: T.body, boxShadow: T.card }}>
-            <MessageSquare size={15} style={{ color: T.muted }} /> AI Chat
+            <MessageSquare size={15} style={{ color: T.muted }} /> <span className="hidden sm:inline">AI </span>Chat
           </Link>
           <Link to="/apply"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:brightness-105"
+            className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:brightness-105"
             style={{ background: 'linear-gradient(135deg,#16A34A,#15803D)', boxShadow: '0 4px 14px rgba(22,163,74,0.3)' }}>
             <Plus size={15} strokeWidth={2.5} /> Apply Now
           </Link>
@@ -110,19 +110,19 @@ export default function UserDashboard() {
       {/* ══ 2. ACTION ALERT ══════════════════════════════════ */}
       {needsAction && (
         <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-          className="flex items-start sm:items-center justify-between gap-4 px-5 py-3.5 rounded-2xl"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 rounded-2xl"
           style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
-          <div className="flex items-center gap-3">
+          <div className="flex items-start sm:items-center gap-3">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#FEF3C7' }}>
               <AlertTriangle size={15} style={{ color: '#D97706' }} />
             </div>
             <div>
               <p className="text-sm font-bold" style={{ color: '#92400E' }}>Action may be required on your application</p>
-              <p className="text-xs" style={{ color: '#B45309' }}>Ensure all required documents are uploaded to avoid delays in processing.</p>
+              <p className="text-xs" style={{ color: '#B45309' }}>Ensure all required documents are uploaded to avoid delays.</p>
             </div>
           </div>
           <Link to="/apply"
-            className="shrink-0 text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all hover:brightness-105"
+            className="self-start sm:self-auto shrink-0 text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all hover:brightness-105"
             style={{ background: '#F59E0B', color: '#fff' }}>
             Take Action
           </Link>
@@ -211,7 +211,7 @@ export default function UserDashboard() {
                         style={{ color: i <= pStep ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)' }}>{step}</span>
                     </div>
                     {i < PIPELINE.length - 1 && (
-                      <div className="h-px w-6 sm:w-10 md:w-14 mx-1 sm:mx-1.5 mb-4 rounded"
+                      <div className="h-px flex-1 mx-1 mb-4 rounded"
                         style={{ background: i < pStep ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.18)' }} />
                     )}
                   </div>

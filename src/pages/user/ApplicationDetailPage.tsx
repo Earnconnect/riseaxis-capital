@@ -154,13 +154,13 @@ export default function ApplicationDetailPage() {
             boxShadow: `0 8px 32px ${SC(app.status)}35`,
           }}>
           <div className="absolute -right-10 -top-10 w-44 h-44 rounded-full pointer-events-none" style={{ background: 'rgba(255,255,255,0.1)' }} />
-          <div className="relative flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                <ProgIcon size={22} className="text-white" />
+          <div className="relative flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                <ProgIcon size={20} className="text-white" />
               </div>
-              <div>
-                <p className="text-white/60 text-xs font-semibold mb-0.5">{getGrantProgramLabel(app.grant_program)}</p>
+              <div className="min-w-0">
+                <p className="text-white/60 text-xs font-semibold mb-0.5 truncate">{getGrantProgramLabel(app.grant_program)}</p>
                 <p className="text-2xl sm:text-3xl font-black text-white leading-none mb-1">{formatCurrency(app.requested_amount)}</p>
                 <p className="font-mono text-white/40 text-xs">#{app.app_number}</p>
                 {app.approved_amount && app.approved_amount !== app.requested_amount && (
@@ -168,11 +168,11 @@ export default function ApplicationDetailPage() {
                 )}
               </div>
             </div>
-            <div className="flex flex-col items-start sm:items-end gap-2">
+            <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2">
               <Pill status={app.status} />
               <p className="text-white/50 text-xs">Submitted {formatDateShort(app.created_at)}</p>
               {app.reviewed_at && (
-                <p className="text-white/50 text-xs">Reviewed {formatDateShort(app.reviewed_at)}</p>
+                <p className="text-white/50 text-xs hidden sm:block">Reviewed {formatDateShort(app.reviewed_at)}</p>
               )}
             </div>
           </div>
@@ -598,7 +598,7 @@ function MessagesTab({ app, messages, setMessages, user, profile }: {
   }
 
   return (
-    <div className="rounded-2xl overflow-hidden flex flex-col" style={{ background: T.white, boxShadow: T.card, height: '65vh' }}>
+    <div className="rounded-2xl overflow-hidden flex flex-col" style={{ background: T.white, boxShadow: T.card, height: 'calc(100svh - 18rem)', minHeight: '400px', maxHeight: '700px' }}>
       {/* Header */}
       <div className="flex items-center gap-3 px-6 py-4" style={{ borderBottom: `1px solid ${T.border}` }}>
         <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: T.greenLt }}>

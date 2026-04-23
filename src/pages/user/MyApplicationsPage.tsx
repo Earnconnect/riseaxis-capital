@@ -135,32 +135,30 @@ export default function MyApplicationsPage() {
 
       {/* Filters */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="rounded-2xl p-4" style={{ background: T.white, boxShadow: T.card }}>
-        <div className="flex flex-col sm:flex-row gap-3">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: T.muted }} />
-            <input
-              value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search by app number, program, or status…"
-              className="w-full h-10 rounded-xl pl-9 pr-3.5 text-sm bg-[#F8FAFC] border border-[#EDE9E3] placeholder:text-slate-400 outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#F0FDF4] transition-all"
-              style={{ color: T.head }}
-            />
-          </div>
-          {/* Status filter */}
-          <div className="flex gap-1.5 flex-wrap">
-            {STATUS_FILTERS.map(f => (
-              <button key={f} onClick={() => setFilter(f)}
-                className="px-3 py-2 rounded-xl text-xs font-semibold transition-all capitalize whitespace-nowrap"
-                style={{
-                  background: filter === f ? T.head : '#F8FAFC',
-                  color: filter === f ? '#fff' : T.muted,
-                  border: filter === f ? 'none' : `1px solid ${T.border}`,
-                }}>
-                {f === 'all' ? 'All' : getStatusLabel(f)} {f !== 'all' && `(${apps.filter(a => a.status === f).length})`}
-              </button>
-            ))}
-          </div>
+        className="rounded-2xl p-4 space-y-3" style={{ background: T.white, boxShadow: T.card }}>
+        {/* Search */}
+        <div className="relative">
+          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: T.muted }} />
+          <input
+            value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Search by app number, program, or status…"
+            className="w-full h-10 rounded-xl pl-9 pr-3.5 text-sm bg-[#F8FAFC] border border-[#EDE9E3] placeholder:text-slate-400 outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#F0FDF4] transition-all"
+            style={{ color: T.head }}
+          />
+        </div>
+        {/* Status filter — horizontal scroll on mobile */}
+        <div className="flex gap-1.5 overflow-x-auto hide-scrollbar pb-0.5">
+          {STATUS_FILTERS.map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all capitalize whitespace-nowrap shrink-0"
+              style={{
+                background: filter === f ? T.head : '#F8FAFC',
+                color: filter === f ? '#fff' : T.muted,
+                border: filter === f ? 'none' : `1px solid ${T.border}`,
+              }}>
+              {f === 'all' ? 'All' : getStatusLabel(f)}{f !== 'all' ? ` (${apps.filter(a => a.status === f).length})` : ''}
+            </button>
+          ))}
         </div>
       </motion.div>
 
@@ -210,33 +208,33 @@ export default function MyApplicationsPage() {
                 className="rounded-2xl overflow-hidden" style={{ background: T.white, boxShadow: T.card }}>
 
                 {/* App row */}
-                <div className="flex items-center gap-4 px-5 py-4 cursor-pointer transition-colors hover:bg-slate-50/60"
+                <div className="flex items-center gap-3 px-4 sm:px-5 py-4 cursor-pointer transition-colors hover:bg-slate-50/60"
                   onClick={() => setExpanded(isOpen ? null : app.id)}>
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: SB(app.status) }}>
-                    <Icon size={16} style={{ color: SC(app.status) }} />
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: SB(app.status) }}>
+                    <Icon size={15} style={{ color: SC(app.status) }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-bold" style={{ color: T.head }}>{getGrantProgramLabel(app.grant_program)}</p>
+                      <p className="text-sm font-bold truncate" style={{ color: T.head }}>{getGrantProgramLabel(app.grant_program)}</p>
                       <Pill status={app.status} />
                     </div>
-                    <p className="text-xs mt-0.5 flex items-center gap-2" style={{ color: T.muted }}>
+                    <p className="text-xs mt-0.5 flex items-center gap-1.5 flex-wrap" style={{ color: T.muted }}>
                       <span className="font-mono">#{app.app_number}</span>
                       <span>·</span>
                       <span>{formatDateShort(app.created_at)}</span>
                       {app.status === 'disbursed' && app.approved_amount && (
-                        <><span>·</span><span className="font-semibold text-green-600">+{formatCurrency(app.approved_amount)} disbursed</span></>
+                        <span className="font-semibold text-green-600">+{formatCurrency(app.approved_amount)}</span>
                       )}
                     </p>
                   </div>
-                  <div className="text-right shrink-0">
+                  <div className="text-right shrink-0 hidden xs:block sm:block">
                     <p className="text-sm font-bold" style={{ color: T.head }}>{formatCurrency(app.requested_amount)}</p>
                     {app.approved_amount && app.approved_amount !== app.requested_amount && (
-                      <p className="text-xs" style={{ color: T.green }}>Approved: {formatCurrency(app.approved_amount)}</p>
+                      <p className="text-xs" style={{ color: T.green }}>✓ {formatCurrency(app.approved_amount)}</p>
                     )}
                   </div>
                   <div className="shrink-0 p-1 rounded-lg transition-colors" style={{ color: T.muted }}>
-                    {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    {isOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                   </div>
                 </div>
 
