@@ -36,9 +36,11 @@ import NotificationSettingsPage from '@/pages/user/NotificationSettingsPage'
 import MyApplicationsPage from '@/pages/user/MyApplicationsPage'
 import ApplicationDetailPage from '@/pages/user/ApplicationDetailPage'
 import ProfilePage from '@/pages/user/ProfilePage'
+import WalletPage from '@/pages/user/WalletPage'
 
 // Admin pages
 import UsersPage from '@/pages/admin/UsersPage'
+import WithdrawalRequestsPage from '@/pages/admin/WithdrawalRequestsPage'
 import AdminOverview from '@/pages/admin/AdminOverview'
 import ApplicationsDashboard from '@/pages/admin/ApplicationsDashboard'
 import ReviewApplicationPage from '@/pages/admin/ReviewApplicationPage'
@@ -84,6 +86,7 @@ export default function App() {
             <Route path="/applications/:id" element={<ApplicationDetailPage />} />
             <Route path="/settings" element={<NotificationSettingsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/wallet" element={<WalletPage />} />
           </Route>
 
           {/* Admin routes */}
@@ -101,6 +104,7 @@ export default function App() {
             <Route path="/admin/payments/new" element={<CreateReceiptPage />} />
             <Route path="/admin/payments/:id" element={<ViewReceiptPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
+            <Route path="/admin/withdrawals" element={<WithdrawalRequestsPage />} />
           </Route>
 
           {/* 404 */}

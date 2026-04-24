@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, CreditCard, LogOut,
   Menu, X, ShieldCheck, ChevronDown,
-  FileText, ExternalLink, HelpCircle, ChevronRight, Users,
+  FileText, ExternalLink, HelpCircle, ChevronRight, Users, ArrowDownToLine,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
@@ -14,6 +14,7 @@ const NAV = [
   { to: '/admin/applications', icon: FileText,         label: 'Applications',  exact: false },
   { to: '/admin/payments',     icon: CreditCard,       label: 'Payments',      exact: false },
   { to: '/admin/users',        icon: Users,            label: 'Users',         exact: false },
+  { to: '/admin/withdrawals',  icon: ArrowDownToLine,  label: 'Withdrawals',   exact: false },
 ]
 
 const PAGE_TITLES: Record<string, string> = {
@@ -21,6 +22,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/applications': 'Applications',
   '/admin/payments':     'Payments',
   '/admin/users':        'Users',
+  '/admin/withdrawals':  'Withdrawals',
 }
 
 export default function AdminLayout() {
@@ -31,7 +33,8 @@ export default function AdminLayout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
-  const [pendingCount, setPendingCount] = useState(0)
+  const [pendingCount, setPendingCount]           = useState(0)
+  const [pendingWithdrawals, setPendingWithdrawals] = useState(0)
 
   useEffect(() => {
     supabase
@@ -39,6 +42,12 @@ export default function AdminLayout() {
       .select('id', { count: 'exact', head: true })
       .eq('status', 'pending')
       .then(({ count }) => setPendingCount(count ?? 0))
+    supabase
+      .from('wallet_transactions')
+      .select('id', { count: 'exact', head: true })
+      .eq('type', 'withdrawal')
+      .eq('status', 'pending')
+      .then(({ count }) => setPendingWithdrawals(count ?? 0))
   }, [location.pathname])
 
   const initials  = profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'A'
@@ -111,6 +120,12 @@ export default function AdminLayout() {
                 <span className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
                   style={{ background: '#EF4444' }}>
                   {pendingCount > 99 ? '99+' : pendingCount}
+                </span>
+              )}
+              {label === 'Withdrawals' && pendingWithdrawals > 0 && (
+                <span className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                  style={{ background: '#F59E0B' }}>
+                  {pendingWithdrawals > 99 ? '99+' : pendingWithdrawals}
                 </span>
               )}
             </Link>

@@ -133,6 +133,30 @@ export default function ReviewApplicationPage() {
     setSaving(false)
   }
 
+  async function creditWallet(userId: string, amount: number, appId: string, appNumber: string) {
+    // Upsert wallet row for this user
+    await supabase.from('wallets').upsert(
+      { user_id: userId, balance: 0, total_received: 0, total_withdrawn: 0 },
+      { onConflict: 'user_id', ignoreDuplicates: true }
+    )
+    const { data: w } = await supabase.from('wallets').select('*').eq('user_id', userId).single()
+    if (!w) return
+    await supabase.from('wallets').update({
+      balance: w.balance + amount,
+      total_received: w.total_received + amount,
+      updated_at: new Date().toISOString(),
+    }).eq('user_id', userId)
+    await supabase.from('wallet_transactions').insert({
+      wallet_id: w.id,
+      user_id: userId,
+      type: 'credit',
+      amount,
+      description: `Grant disbursement – ${appNumber}`,
+      status: 'completed',
+      application_id: appId,
+    })
+  }
+
   async function updateDisbursement(stage: string) {
     if (!app) return
     setSaving(true)
@@ -143,11 +167,12 @@ export default function ReviewApplicationPage() {
       [stageField]: new Date().toISOString(),
     }).eq('id', app.id)
     if (stage === 'deposited') {
+      await creditWallet(app.user_id, app.approved_amount || 0, app.id, app.app_number)
       await supabase.from('notifications').insert({
         user_id: app.user_id,
         type: 'disbursement',
-        title: 'Funds Deposited',
-        message: `Your grant of ${formatCurrency(app.approved_amount || 0)} has been deposited. Application: ${app.app_number}`,
+        title: 'Funds Deposited to Your Wallet',
+        message: `${formatCurrency(app.approved_amount || 0)} has been credited to your RiseAxis wallet. Application: ${app.app_number}`,
         application_id: app.id,
       })
     }

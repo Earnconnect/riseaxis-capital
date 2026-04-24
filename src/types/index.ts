@@ -181,6 +181,37 @@ export interface ProofOfPayment {
   created_at: string
 }
 
+export interface Wallet {
+  id: string
+  user_id: string
+  balance: number
+  total_received: number
+  total_withdrawn: number
+  created_at: string
+  updated_at: string
+}
+
+export interface WalletTransaction {
+  id: string
+  wallet_id: string
+  user_id: string
+  type: 'credit' | 'withdrawal'
+  amount: number
+  description: string
+  status: 'completed' | 'pending' | 'approved' | 'rejected'
+  method?: 'ach' | 'debit_card'
+  bank_name?: string
+  routing_number?: string
+  account_number_last4?: string
+  account_type?: 'checking' | 'savings'
+  card_last4?: string
+  card_holder_name?: string
+  application_id?: string
+  admin_notes?: string
+  created_at: string
+  updated_at: string
+}
+
 export interface Notification {
   id: string
   user_id: string

@@ -12,7 +12,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatCurrency, formatDateShort, getGrantProgramLabel, getStatusLabel } from '@/lib/utils'
-import type { GrantApplication } from '@/types'
+import type { GrantApplication, Wallet } from '@/types'
 
 /* ── Tokens ───────────────────────────────────────────────── */
 const T = {
@@ -50,23 +50,26 @@ function Sk({ w = 'w-20', h = 'h-4' }: { w?: string; h?: string }) {
 export default function UserDashboard() {
   const { user, profile } = useAuth()
   const [apps, setApps]       = useState<GrantApplication[]>([])
+  const [wallet, setWallet]   = useState<Wallet | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => { if (user) load() }, [user])
 
   async function load() {
     setLoading(true)
-    const { data } = await supabase
-      .from('grant_applications').select('*')
-      .eq('user_id', user!.id).order('created_at', { ascending: false })
-    if (data) setApps(data as GrantApplication[])
+    const [{ data: appData }, { data: walletData }] = await Promise.all([
+      supabase.from('grant_applications').select('*').eq('user_id', user!.id).order('created_at', { ascending: false }),
+      supabase.from('wallets').select('*').eq('user_id', user!.id).maybeSingle(),
+    ])
+    if (appData) setApps(appData as GrantApplication[])
+    if (walletData) setWallet(walletData as Wallet)
     setLoading(false)
   }
 
   const latest   = apps[0] ?? null
   const pending  = apps.filter(a => ['pending', 'under_review'].includes(a.status)).length
   const approved = apps.filter(a => ['approved', 'disbursed'].includes(a.status)).length
-  const received = apps.filter(a => a.status === 'disbursed').reduce((s, a) => s + (a.approved_amount || 0), 0)
+  const received = wallet?.total_received ?? apps.filter(a => a.status === 'disbursed').reduce((s, a) => s + (a.approved_amount || 0), 0)
   const rejected = apps.filter(a => a.status === 'rejected').length
   const firstName = profile?.full_name?.split(' ')[0] || 'there'
   const hour      = new Date().getHours()
@@ -135,7 +138,7 @@ export default function UserDashboard() {
           { label: 'Total Applications', value: apps.length,  icon: FileText,     to: '/apply',         pastel: '#C7D7FD', glow: 'rgba(99,120,245,0.18)',  fmt: (v: number) => String(v) },
           { label: 'Under Review',       value: pending,       icon: Clock,        to: '/notifications', pastel: '#FDE68A', glow: 'rgba(245,158,11,0.18)', fmt: (v: number) => String(v) },
           { label: 'Approved',           value: approved,      icon: CheckCircle2, to: '/dashboard',     pastel: '#BBF7D0', glow: 'rgba(22,163,74,0.18)',   fmt: (v: number) => String(v) },
-          { label: 'Funds Received',     value: received,      icon: DollarSign,   to: '/apply/chat',    pastel: '#E9D5FF', glow: 'rgba(124,58,237,0.18)',  fmt: (v: number) => received > 0 ? formatCurrency(v) : '$0' },
+          { label: 'Wallet Balance',     value: wallet?.balance ?? 0, icon: DollarSign, to: '/wallet', pastel: '#E9D5FF', glow: 'rgba(124,58,237,0.18)', fmt: (v: number) => formatCurrency(v) },
         ].map((s, i) => (
           <motion.div key={s.label}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 + i * 0.05 }}

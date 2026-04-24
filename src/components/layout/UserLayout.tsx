@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, FileText, MessageSquare, Bell,
   Settings, LogOut, Menu, X, Plus, ChevronDown,
-  HelpCircle, ClipboardList, UserCircle,
+  HelpCircle, ClipboardList, UserCircle, Wallet,
   ChevronRight, ExternalLink,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -16,6 +16,7 @@ const NAV_MAIN = [
   { to: '/applications',   icon: ClipboardList,   label: 'My Applications',  exact: false },
   { to: '/apply/chat',     icon: MessageSquare,   label: 'AI Assistant',     exact: false },
   { to: '/notifications',  icon: Bell,            label: 'Notifications',    exact: false },
+  { to: '/wallet',         icon: Wallet,          label: 'My Wallet',        exact: false },
 ]
 const NAV_ACCOUNT = [
   { to: '/profile',  icon: UserCircle, label: 'My Profile', exact: false },
@@ -30,6 +31,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/notifications': 'Notifications',
   '/settings':      'Account Settings',
   '/profile':       'My Profile',
+  '/wallet':        'My Wallet',
 }
 
 export default function UserLayout() {
