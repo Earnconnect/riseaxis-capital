@@ -14,11 +14,14 @@ const NAV_LINKS = [
 ]
 
 const MORE_LINKS = [
-  { to: '/track',     label: 'Track Application' },
-  { to: '/impact',    label: 'Impact Report' },
-  { to: '/news',      label: 'News & Media' },
-  { to: '/careers',   label: 'Careers' },
-  { to: '/resources', label: 'Resource Center' },
+  { to: '/track',      label: 'Track Application' },
+  { to: '/impact',     label: 'Impact Report' },
+  { to: '/news',       label: 'News & Media' },
+  { to: '/careers',    label: 'Careers' },
+  { to: '/resources',  label: 'Resource Center' },
+  { to: '/faq',        label: 'FAQ' },
+  { to: '/governance', label: 'Governance' },
+  { to: '/partners',   label: 'Partners' },
 ]
 
 export default function PublicNavbar() {

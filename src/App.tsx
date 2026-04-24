@@ -28,6 +28,10 @@ import ImpactPage from '@/pages/public/ImpactPage'
 import NewsPage from '@/pages/public/NewsPage'
 import CareersPage from '@/pages/public/CareersPage'
 import ResourcesPage from '@/pages/public/ResourcesPage'
+import GovernancePage from '@/pages/public/GovernancePage'
+import FAQPage from '@/pages/public/FAQPage'
+import PartnersPage from '@/pages/public/PartnersPage'
+import CookieBanner from '@/components/ui/CookieBanner'
 import LoginPage from '@/pages/auth/LoginPage'
 import RegisterPage from '@/pages/auth/RegisterPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
@@ -58,6 +62,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <ScrollToTop />
+        <CookieBanner />
         <Routes>
           {/* Public routes */}
           <Route element={<PublicLayout />}>
@@ -73,7 +78,10 @@ export default function App() {
             <Route path="/impact" element={<ImpactPage />} />
             <Route path="/news" element={<NewsPage />} />
             <Route path="/careers" element={<CareersPage />} />
-            <Route path="/resources" element={<ResourcesPage />} />
+            <Route path="/resources"   element={<ResourcesPage />} />
+            <Route path="/governance" element={<GovernancePage />} />
+            <Route path="/faq"        element={<FAQPage />} />
+            <Route path="/partners"   element={<PartnersPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />

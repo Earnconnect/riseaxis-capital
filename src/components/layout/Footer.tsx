@@ -20,6 +20,9 @@ const QUICK_LINKS = [
   { label: 'News & Media',    to: '/news' },
   { label: 'Careers',         to: '/careers' },
   { label: 'Resource Center', to: '/resources' },
+  { label: 'FAQ',             to: '/faq' },
+  { label: 'Governance',      to: '/governance' },
+  { label: 'Partners',        to: '/partners' },
   { label: 'Sign In',         to: '/login' },
 ]
 
