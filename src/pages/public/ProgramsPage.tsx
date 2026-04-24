@@ -14,7 +14,7 @@ const G = {
 
 const programs = [
   {
-    id: 'emergency', icon: Shield,
+    id: 'emergency', icon: Shield, photo: 'housing.webp',
     title: 'Emergency Assistance Grant', range: '$5,000 – $10,000',
     color: '#DC2626', bg: '#FEF2F2', border: '#FECACA', accentBg: '#FEE2E2',
     description: 'Immediate financial relief for individuals and families facing urgent crises that threaten housing, utilities, or immediate safety.',
@@ -23,7 +23,7 @@ const programs = [
     requirements: ['Proof of emergency circumstance', 'Government-issued photo ID', 'Proof of current address', 'U.S. bank account information'],
   },
   {
-    id: 'education', icon: GraduationCap,
+    id: 'education', icon: GraduationCap, photo: 'classroom.webp',
     title: 'Education Support Grant', range: '$8,000 – $15,000',
     color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE', accentBg: '#DBEAFE',
     description: 'Funding for tuition, certification programs, books, and education-related expenses for eligible learners at all levels.',
@@ -32,7 +32,7 @@ const programs = [
     requirements: ['Enrollment verification letter', 'Tuition invoices or cost estimates', 'Government-issued photo ID', 'Academic records or transcripts'],
   },
   {
-    id: 'medical', icon: HeartPulse,
+    id: 'medical', icon: HeartPulse, photo: 'healthcare.webp',
     title: 'Medical Expenses Grant', range: '$10,000 – $25,000',
     color: '#DB2777', bg: '#FDF2F8', border: '#FBCFE8', accentBg: '#FCE7F3',
     description: 'Coverage for medical bills, ongoing treatments, prescriptions, and healthcare costs for uninsured or underinsured individuals.',
@@ -41,7 +41,7 @@ const programs = [
     requirements: ['Medical invoices or outstanding bills', 'Healthcare provider documentation', 'Government-issued photo ID', 'Insurance information (if applicable)'],
   },
   {
-    id: 'community', icon: Users,
+    id: 'community', icon: Users, photo: 'volunteers.webp',
     title: 'Community Development Grant', range: '$15,000 – $25,000',
     color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0', accentBg: '#DCFCE7',
     description: 'Funding for organizations and individuals driving positive community change through programs, facilities, and social initiatives.',
@@ -50,7 +50,7 @@ const programs = [
     requirements: ['Project proposal and detailed budget', 'Organization documentation', 'Community impact statement', 'Leadership identification'],
   },
   {
-    id: 'business', icon: Briefcase,
+    id: 'business', icon: Briefcase, photo: 'business.webp',
     title: 'Business Funding Grant', range: '$5,000 – $50,000',
     color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', accentBg: '#EDE9FE',
     description: 'Start-up capital, operational grants, and expansion funding for small businesses and entrepreneurs in qualifying industries.',
@@ -59,7 +59,7 @@ const programs = [
     requirements: ['Business plan and financial projections', 'Financial statements (last 2 years)', 'Business registration documents', 'Owner government-issued ID'],
   },
   {
-    id: 'other', icon: Building2,
+    id: 'other', icon: Building2, photo: 'general.webp',
     title: 'Other Qualifying Needs', range: 'Custom Amount',
     color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', accentBg: '#FEF3C7',
     description: 'Tailored grants for unique financial circumstances not specifically covered by our standard program categories.',
@@ -108,33 +108,47 @@ export default function ProgramsPage() {
               key={prog.id} id={prog.id}
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }} transition={{ delay: i * 0.05 }}
-              className="rounded-2xl p-7 md:p-8 transition-all duration-200"
+              className="rounded-2xl overflow-hidden transition-all duration-200"
               style={{ background: G.white, border: `1px solid ${G.border}`,
-                boxShadow: '0 1px 4px rgba(0,0,0,0.05)', borderLeft: `4px solid ${prog.color}` }}
+                boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}
               onMouseEnter={e => {
                 e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.09)'
-                e.currentTarget.style.borderColor = prog.border
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.05)'
-                e.currentTarget.style.borderColor = G.border
-                e.currentTarget.style.borderLeftColor = prog.color
               }}>
-              <div className="flex flex-col lg:flex-row gap-8">
+              <div className="flex flex-col lg:flex-row">
+
+                {/* Photo panel */}
+                <div className="relative lg:w-64 shrink-0 overflow-hidden"
+                  style={{ minHeight: '200px' }}>
+                  <img src={`/${prog.photo}`} alt={prog.title}
+                    className="absolute inset-0 w-full h-full object-cover object-center" />
+                  <div className="absolute inset-0"
+                    style={{ background: `linear-gradient(to right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 100%)` }} />
+                  <div className="absolute inset-0"
+                    style={{ borderRight: `4px solid ${prog.color}` }} />
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                        style={{ background: prog.bg, border: `1px solid ${prog.border}` }}>
+                        <prog.icon className="w-5 h-5" style={{ color: prog.color }} />
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        style={{ background: 'rgba(255,255,255,0.9)', color: prog.color }}>Open</span>
+                    </div>
+                    <div className="text-sm font-bold text-white leading-tight">{prog.title}</div>
+                    <div className="text-xs font-semibold mt-0.5" style={{ color: prog.color }}>{prog.range}</div>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex flex-col lg:flex-row gap-8 flex-1 p-7 md:p-8">
 
                 {/* Left — info */}
-                <div className="lg:w-1/3">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                      style={{ background: prog.bg, border: `1px solid ${prog.border}` }}>
-                      <prog.icon className="w-6 h-6" style={{ color: prog.color }} />
-                    </div>
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full"
-                      style={{ background: prog.bg, color: prog.color }}>Open</span>
-                  </div>
-
+                <div className="lg:w-2/5">
                   <h2 className="text-xl font-bold mb-2" style={{ color: G.heading }}>{prog.title}</h2>
-                  <div className="text-lg font-bold mb-3" style={{ color: prog.color }}>{prog.range}</div>
+                  <div className="text-base font-bold mb-3" style={{ color: prog.color }}>{prog.range}</div>
                   <p className="text-sm leading-relaxed mb-4" style={{ color: G.body }}>{prog.description}</p>
 
                   <div className="flex items-center gap-2 text-xs mb-6">
@@ -151,7 +165,7 @@ export default function ProgramsPage() {
                 </div>
 
                 {/* Right — eligibility + requirements */}
-                <div className="lg:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="lg:w-3/5 grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <div className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: G.muted }}>
                       Eligibility Criteria
@@ -179,6 +193,7 @@ export default function ProgramsPage() {
                     </ul>
                   </div>
                 </div>
+                </div>{/* end Content */}
               </div>
             </motion.div>
           ))}
