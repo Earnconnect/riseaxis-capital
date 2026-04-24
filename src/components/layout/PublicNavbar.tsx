@@ -21,7 +21,9 @@ const MORE_LINKS = [
   { to: '/resources',  label: 'Resource Center' },
   { to: '/faq',        label: 'FAQ' },
   { to: '/governance', label: 'Governance' },
-  { to: '/partners',   label: 'Partners' },
+  { to: '/partners',      label: 'Partners' },
+  { to: '/donate',        label: 'Donate' },
+  { to: '/fraud-warning', label: 'Fraud Warning' },
 ]
 
 export default function PublicNavbar() {

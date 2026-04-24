@@ -32,6 +32,9 @@ import GovernancePage from '@/pages/public/GovernancePage'
 import FAQPage from '@/pages/public/FAQPage'
 import PartnersPage from '@/pages/public/PartnersPage'
 import CookieBanner from '@/components/ui/CookieBanner'
+import DonatePage from '@/pages/public/DonatePage'
+import FraudWarningPage from '@/pages/public/FraudWarningPage'
+import AccessibilityPage from '@/pages/public/AccessibilityPage'
 import LoginPage from '@/pages/auth/LoginPage'
 import RegisterPage from '@/pages/auth/RegisterPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
@@ -81,7 +84,10 @@ export default function App() {
             <Route path="/resources"   element={<ResourcesPage />} />
             <Route path="/governance" element={<GovernancePage />} />
             <Route path="/faq"        element={<FAQPage />} />
-            <Route path="/partners"   element={<PartnersPage />} />
+            <Route path="/partners"     element={<PartnersPage />} />
+            <Route path="/donate"       element={<DonatePage />} />
+            <Route path="/fraud-warning" element={<FraudWarningPage />} />
+            <Route path="/accessibility" element={<AccessibilityPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />

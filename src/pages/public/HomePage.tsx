@@ -170,6 +170,98 @@ function CountUp({ to, prefix = '', suffix = '', duration = 2.2 }: { to: number;
   return <span ref={ref}>{prefix}{count.toLocaleString()}{suffix}</span>
 }
 
+/* ─── newsletter section ──────────────────────────────────── */
+function NewsletterSection() {
+  const [email, setEmail] = useState('')
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email.includes('@')) { setStatus('error'); return }
+    setStatus('success')
+    setEmail('')
+  }
+
+  return (
+    <section className="py-16" style={{ background: G.page }}>
+      <div className="max-w-[1440px] mx-auto px-5 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="rounded-2xl overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-2">
+            <div className="p-10 lg:p-12" style={{ background: G.navy }}>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-5"
+                style={{ background: 'rgba(22,163,74,0.15)', border: '1px solid rgba(22,163,74,0.3)' }}>
+                <Mail className="w-3 h-3 text-green-400" />
+                <span className="text-[11px] font-bold uppercase tracking-widest text-green-400">Grant Alerts</span>
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-3">Stay Updated on Grant Opportunities</h2>
+              <p className="text-sm leading-relaxed mb-6" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                Get notified when new programs open, funding rounds begin, and important deadlines approach. We send 2–4 emails per month — no spam.
+              </p>
+              <div className="space-y-2">
+                {['New program announcements', 'Funding deadline reminders', 'Policy and eligibility updates', 'Impact reports & success stories'].map(b => (
+                  <div key={b} className="flex items-center gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-green-400 shrink-0" /> {b}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="p-10 lg:p-12 flex flex-col justify-center" style={{ background: G.white }}>
+              {status === 'success' ? (
+                <div className="text-center">
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+                    style={{ background: G.greenLt, border: `2px solid ${G.greenBd}` }}>
+                    <CheckCircle2 className="w-7 h-7" style={{ color: G.green }} />
+                  </div>
+                  <div className="text-lg font-bold mb-2" style={{ color: G.heading }}>You're subscribed!</div>
+                  <p className="text-sm" style={{ color: G.body }}>
+                    Check your inbox for a confirmation email. You'll be the first to know when new grants open.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="text-sm font-bold mb-1" style={{ color: G.heading }}>Subscribe to Grant Alerts</div>
+                  <p className="text-xs mb-5" style={{ color: G.muted }}>Join 8,400+ subscribers. Unsubscribe anytime.</p>
+                  <form onSubmit={handleSubmit} className="space-y-3">
+                    <div>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={e => { setEmail(e.target.value); setStatus('idle') }}
+                        placeholder="your@email.com"
+                        className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
+                        style={{
+                          background: G.page,
+                          border: `1px solid ${status === 'error' ? '#FECACA' : G.border}`,
+                          color: G.heading,
+                        }}
+                      />
+                      {status === 'error' && (
+                        <p className="text-xs mt-1.5 text-red-500">Please enter a valid email address.</p>
+                      )}
+                    </div>
+                    <button type="submit"
+                      className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all hover:brightness-110"
+                      style={{ background: 'linear-gradient(135deg, #16A34A, #15803D)', boxShadow: '0 4px 14px rgba(22,163,74,0.25)' }}>
+                      Subscribe — It's Free
+                    </button>
+                    <p className="text-[10px] text-center" style={{ color: G.muted }}>
+                      We respect your privacy. Your email will never be sold or shared. See our{' '}
+                      <a href="/privacy" className="underline">Privacy Policy</a>.
+                    </p>
+                  </form>
+                </>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
 /* ─── main ────────────────────────────────────────────────── */
 export default function HomePage() {
   const [activeProgram, setActiveProgram] = useState<string | null>(null)
@@ -903,6 +995,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── Newsletter ───────────────────────────────────── */}
+      <NewsletterSection />
 
       {/* ── Bottom CTA ───────────────────────────────────── */}
       <section className="py-24 relative overflow-hidden" style={{ background: G.navy }}>

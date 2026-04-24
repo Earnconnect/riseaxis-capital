@@ -76,6 +76,15 @@ export default function UserDashboard() {
   const greeting  = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
   const today     = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 
+  const profileFields = [
+    { label: 'Full Name',    done: !!profile?.full_name },
+    { label: 'Phone Number', done: !!profile?.phone },
+    { label: 'Date of Birth', done: !!profile?.date_of_birth },
+    { label: 'SSN Last 4',   done: !!profile?.ssn_last4 },
+    { label: 'Address',      done: !!profile?.address_line1 },
+  ]
+  const profilePct = Math.round((profileFields.filter(f => f.done).length / profileFields.length) * 100)
+
   const PIPELINE = ['Submitted', 'In Review', 'Decision', 'Funded']
   const pStep    = latest ? ({ disbursed: 3, approved: 2, under_review: 1 }[latest.status] ?? 0) : -1
 
@@ -162,7 +171,39 @@ export default function UserDashboard() {
         ))}
       </div>
 
-      {/* ══ 3b. DECISION COUNTDOWN ═══════════════════════════ */}
+      {/* ══ 3b. PROFILE COMPLETENESS ═════════════════════════ */}
+      {profilePct < 100 && (
+        <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 rounded-2xl"
+          style={{ background: '#F5F3FF', border: '1px solid #DDD6FE' }}>
+          <div className="flex items-start sm:items-center gap-3 flex-1">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EDE9FE' }}>
+              <Star size={15} style={{ color: '#7C3AED' }} />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold" style={{ color: '#4C1D95' }}>
+                Complete your profile — {profilePct}% done
+              </p>
+              <p className="text-xs mb-2" style={{ color: '#6D28D9' }}>
+                A complete profile speeds up your application review. Missing: {profileFields.filter(f => !f.done).map(f => f.label).join(', ')}.
+              </p>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 rounded-full" style={{ background: '#DDD6FE', maxWidth: '180px' }}>
+                  <div className="h-1.5 rounded-full transition-all" style={{ width: `${profilePct}%`, background: '#7C3AED' }} />
+                </div>
+                <span className="text-[10px] font-bold" style={{ color: '#7C3AED' }}>{profilePct}%</span>
+              </div>
+            </div>
+          </div>
+          <Link to="/profile"
+            className="self-start sm:self-auto shrink-0 text-xs font-bold px-3.5 py-1.5 rounded-lg text-white transition-all hover:brightness-105"
+            style={{ background: '#7C3AED' }}>
+            Complete Profile
+          </Link>
+        </motion.div>
+      )}
+
+      {/* ══ 3c. DECISION COUNTDOWN ═══════════════════════════ */}
       {latest?.status === 'under_review' && (() => {
         const submitted = new Date(latest.created_at)
         const decisionDate = new Date(submitted.getTime() + 7 * 24 * 60 * 60 * 1000)
