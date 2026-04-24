@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -13,12 +13,22 @@ const NAV_LINKS = [
   { to: '/apply/chat', label: 'AI Assistant' },
 ]
 
+const MORE_LINKS = [
+  { to: '/track',     label: 'Track Application' },
+  { to: '/impact',    label: 'Impact Report' },
+  { to: '/news',      label: 'News & Media' },
+  { to: '/careers',   label: 'Careers' },
+  { to: '/resources', label: 'Resource Center' },
+]
+
 export default function PublicNavbar() {
-  const [open, setOpen]       = useState(false)
+  const [open, setOpen]         = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { user, isAdmin, signOut } = useAuth()
   const navigate  = useNavigate()
   const location  = useLocation()
+  const moreRef   = useRef<HTMLDivElement>(null)
 
   async function handleSignOut() { await signOut(); navigate('/') }
   const isActive = (to: string) =>
@@ -30,7 +40,17 @@ export default function PublicNavbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  useEffect(() => { setOpen(false) }, [location.pathname])
+  useEffect(() => { setOpen(false); setMoreOpen(false) }, [location.pathname])
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -65,6 +85,34 @@ export default function PublicNavbar() {
                 </Link>
               )
             })}
+            {/* More dropdown */}
+            <div className="relative" ref={moreRef}>
+              <button
+                onClick={() => setMoreOpen(!moreOpen)}
+                className={`light-nav-pill flex items-center gap-1 ${MORE_LINKS.some(l => isActive(l.to)) ? 'light-nav-pill-active' : ''}`}>
+                More
+                <ChevronDown size={12} className="transition-transform" style={{ transform: moreOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+              </button>
+              <AnimatePresence>
+                {moreOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 mt-2 w-48 rounded-2xl overflow-hidden z-50"
+                    style={{ background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(20px)', border: '1px solid #E2E8F0', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+                    {MORE_LINKS.map(l => (
+                      <Link key={l.to} to={l.to}
+                        className="flex items-center px-4 py-3 text-[13px] font-medium transition-colors hover:bg-slate-50"
+                        style={{ color: isActive(l.to) ? '#16A34A' : '#475569', borderBottom: '1px solid #F1F5F9' }}>
+                        {l.label}
+                      </Link>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Right actions */}
@@ -134,6 +182,22 @@ export default function PublicNavbar() {
                     </Link>
                   )
                 })}
+                <div className="pt-2 pb-1">
+                  <div className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 text-slate-400">More</div>
+                  {MORE_LINKS.map(l => {
+                    const active = isActive(l.to)
+                    return (
+                      <Link key={l.to} to={l.to}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                          active
+                            ? 'bg-slate-900 text-white font-semibold'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                        }`}>
+                        {l.label}
+                      </Link>
+                    )
+                  })}
+                </div>
               </div>
               <div className="p-4 space-y-2 border-t border-slate-100">
                 {user ? (

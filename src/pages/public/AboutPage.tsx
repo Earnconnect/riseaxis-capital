@@ -35,6 +35,14 @@ const PROGRAMS = [
     desc: 'Flexible funding for unique hardships not covered by our standard programs.' },
 ]
 
+const BOARD_MEMBERS = [
+  { name: 'Rev. Charles B.', title: 'Board Chair',          committee: 'Executive Committee · Governance',        bio: 'Retired federal judge with 24 years on the D.C. Circuit. Expert in nonprofit governance law, IRS compliance, and constitutional law as it pertains to charitable organizations.', initials: 'CB', color: '#0F172A', bg: '#F1F5F9' },
+  { name: 'Dr. Lorraine F.', title: 'Vice Chair',           committee: 'Program Committee · Community Impact',     bio: 'Professor of social policy at Howard University. Former Director of the D.C. Office of Grants Management. Author of three published works on community financial empowerment.', initials: 'LF', color: '#2563EB', bg: '#EFF6FF' },
+  { name: 'Thomas G., CPA',  title: 'Treasurer',            committee: 'Finance Committee · Audit Oversight',      bio: 'Licensed CPA with 20 years in nonprofit fund accounting. Previously Chief Financial Officer at two 501(c)(3) organizations. Oversees annual Form 990 preparation and financial controls.', initials: 'TG', color: '#16A34A', bg: '#F0FDF4' },
+  { name: 'Miriam O., Esq.', title: 'Secretary',            committee: 'Legal & Compliance · Risk Management',     bio: 'Civil rights attorney and former EEOC senior counsel. Manages board minutes, resolution records, and ensures organizational compliance with state and federal nonprofit statutes.', initials: 'MO', color: '#7C3AED', bg: '#F5F3FF' },
+  { name: 'James T.',        title: 'Board Member At-Large', committee: 'Outreach Committee · Technology',         bio: 'Technology entrepreneur and philanthropist. Co-founder of two fintech startups. Guides the organization\'s digital strategy, cybersecurity posture, and applicant portal infrastructure.', initials: 'JT', color: '#D97706', bg: '#FFFBEB' },
+]
+
 const TEAM_VALUES = [
   { icon: Heart,        title: 'Compassion',    desc: 'Every application is reviewed with care for the human story behind it.' },
   { icon: Shield,       title: 'Integrity',     desc: 'Transparent processes, honest communication, and ethical stewardship of funds.' },
@@ -260,6 +268,45 @@ export default function AboutPage() {
               </FadeUp>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Board of Directors ──────────────────────────── */}
+      <section className="py-20" style={{ background: G.white }}>
+        <div className="max-w-[1440px] mx-auto px-5 lg:px-8">
+          <FadeUp>
+            <div className="text-center mb-12">
+              <div className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: G.green }}>Governance</div>
+              <h2 className="text-3xl font-bold tracking-tight mb-3" style={{ color: G.heading }}>Board of Directors</h2>
+              <p className="text-sm max-w-lg mx-auto" style={{ color: G.body }}>
+                Independent volunteer directors providing fiduciary oversight, strategic guidance, and accountability to our mission.
+              </p>
+            </div>
+          </FadeUp>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+            {BOARD_MEMBERS.map((member, i) => (
+              <FadeUp key={member.name} delay={i * 0.07}>
+                <div className="rounded-2xl p-6 h-full transition-all hover:-translate-y-1 hover:shadow-md"
+                  style={{ background: G.page, border: `1px solid ${G.border}` }}>
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-base font-bold text-white mb-4"
+                    style={{ background: member.color }}>{member.initials}</div>
+                  <div className="text-sm font-bold mb-0.5" style={{ color: G.heading }}>{member.name}</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide mb-1" style={{ color: member.color }}>{member.title}</div>
+                  <div className="text-[10px] mb-3 pb-3" style={{ color: G.muted, borderBottom: `1px solid ${G.border}` }}>{member.committee}</div>
+                  <p className="text-xs leading-relaxed" style={{ color: G.body }}>{member.bio}</p>
+                </div>
+              </FadeUp>
+            ))}
+          </div>
+          <FadeUp delay={0.2}>
+            <p className="text-center text-[11px] mt-6" style={{ color: G.muted }}>
+              Board members serve as unpaid volunteers in accordance with our nonprofit bylaws.
+              Board minutes and annual Form 990 available upon written request to{' '}
+              <a href="mailto:governance@riseaxiscapital.com" className="underline" style={{ color: G.green }}>
+                governance@riseaxiscapital.com
+              </a>
+            </p>
+          </FadeUp>
         </div>
       </section>
 

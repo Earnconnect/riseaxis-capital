@@ -10,12 +10,17 @@ const PROGRAMS = [
 ]
 
 const QUICK_LINKS = [
-  { label: 'About Us',       to: '/about' },
-  { label: 'Contact',        to: '/contact' },
-  { label: 'Apply Online',   to: '/apply' },
-  { label: 'AI Assistant',   to: '/apply/chat' },
-  { label: 'Verify Receipt', to: '/verify' },
-  { label: 'Sign In',        to: '/login' },
+  { label: 'About Us',        to: '/about' },
+  { label: 'Contact',         to: '/contact' },
+  { label: 'Apply Online',    to: '/apply' },
+  { label: 'AI Assistant',    to: '/apply/chat' },
+  { label: 'Verify Receipt',  to: '/verify' },
+  { label: 'Track Application', to: '/track' },
+  { label: 'Impact Report',   to: '/impact' },
+  { label: 'News & Media',    to: '/news' },
+  { label: 'Careers',         to: '/careers' },
+  { label: 'Resource Center', to: '/resources' },
+  { label: 'Sign In',         to: '/login' },
 ]
 
 export default function Footer() {

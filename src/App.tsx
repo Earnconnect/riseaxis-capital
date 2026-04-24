@@ -23,6 +23,11 @@ import PrivacyPage from '@/pages/public/PrivacyPage'
 import TermsPage from '@/pages/public/TermsPage'
 import NotFoundPage from '@/pages/public/NotFoundPage'
 import VerifyReceiptPage from '@/pages/public/VerifyReceiptPage'
+import TrackApplicationPage from '@/pages/public/TrackApplicationPage'
+import ImpactPage from '@/pages/public/ImpactPage'
+import NewsPage from '@/pages/public/NewsPage'
+import CareersPage from '@/pages/public/CareersPage'
+import ResourcesPage from '@/pages/public/ResourcesPage'
 import LoginPage from '@/pages/auth/LoginPage'
 import RegisterPage from '@/pages/auth/RegisterPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
@@ -64,6 +69,11 @@ export default function App() {
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/verify" element={<VerifyReceiptPage />} />
             <Route path="/verify/:txId" element={<VerifyReceiptPage />} />
+            <Route path="/track" element={<TrackApplicationPage />} />
+            <Route path="/impact" element={<ImpactPage />} />
+            <Route path="/news" element={<NewsPage />} />
+            <Route path="/careers" element={<CareersPage />} />
+            <Route path="/resources" element={<ResourcesPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
