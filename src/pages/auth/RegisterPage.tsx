@@ -68,35 +68,14 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex" style={{ background: '#070B18' }}>
 
-      {/* Left — animated hero panel */}
+      {/* Left — photo hero panel */}
       <div className="hidden lg:flex flex-col justify-between w-[480px] shrink-0 relative overflow-hidden p-12">
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(135deg, #070B18 0%, #0C1A36 50%, #071828 100%)'
-        }} />
-        {/* Glow blobs */}
-        <motion.div
-          animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-1/3 left-1/2 w-80 h-80 rounded-full"
-          style={{ background: 'radial-gradient(ellipse, rgba(34,197,94,0.4), transparent 70%)', filter: 'blur(60px)' }}
-        />
-        <motion.div
-          animate={{ scale: [1.3, 1, 1.3], opacity: [0.2, 0.4, 0.2] }}
-          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-          className="absolute bottom-1/4 left-1/4 w-60 h-60 rounded-full"
-          style={{ background: 'radial-gradient(ellipse, rgba(59,130,246,0.4), transparent 70%)', filter: 'blur(50px)' }}
-        />
-        <div className="absolute inset-0 opacity-[0.07] dot-pattern" />
-
-        {/* Floating particles */}
-        {[...Array(5)].map((_, i) => (
-          <motion.div key={i}
-            animate={{ y: [0, -18, 0], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 3 + i, repeat: Infinity, ease: 'easeInOut', delay: i * 0.7 }}
-            className="absolute w-1 h-1 rounded-full bg-green-400"
-            style={{ left: `${20 + i * 15}%`, top: `${20 + i * 12}%` }}
-          />
-        ))}
+        {/* Photo */}
+        <img src="/register.webp" alt="" aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover object-center" />
+        {/* Dark overlay — lighter since photo is already very dark */}
+        <div className="absolute inset-0"
+          style={{ background: 'linear-gradient(160deg, rgba(7,11,24,0.65) 0%, rgba(12,26,54,0.55) 50%, rgba(7,11,24,0.72) 100%)' }} />
 
         {/* Content */}
         <div className="relative">

@@ -162,30 +162,39 @@ export default function AboutPage() {
             </FadeUp>
 
             <FadeUp delay={0.1}>
-              <div className="rounded-3xl p-8"
-                style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)' }}>
-                <div className="flex items-center gap-3 mb-6">
-                  <img src="/logo.png" alt="RiseAxis Capital" className="w-10 h-10 object-cover rounded-xl" />
-                  <div>
-                    <div className="font-bold text-white">RiseAxis Capital</div>
-                    <div className="text-xs text-white/40 uppercase tracking-widest">Funding Program</div>
+              <div className="relative rounded-3xl overflow-hidden" style={{ height: '420px' }}>
+                {/* Photo */}
+                <img src="/mission.webp" alt="RiseAxis Capital team meeting"
+                  className="absolute inset-0 w-full h-full object-cover object-center" />
+                {/* Gradient overlay — dark at bottom for readability */}
+                <div className="absolute inset-0"
+                  style={{ background: 'linear-gradient(to top, rgba(15,23,42,0.96) 0%, rgba(15,23,42,0.55) 45%, rgba(15,23,42,0.08) 100%)' }} />
+                {/* Top badge */}
+                <div className="absolute top-5 left-5">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+                    style={{ background: 'rgba(22,163,74,0.2)', border: '1px solid rgba(22,163,74,0.4)', backdropFilter: 'blur(8px)' }}>
+                    <img src="/logo.png" alt="" className="w-4 h-4 object-cover rounded-md" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-green-400">RiseAxis Capital</span>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  {[
-                    { label: 'Legal Name',    value: 'RiseAxis Capital Funding Program' },
-                    { label: 'EIN',           value: '27-0964813' },
-                    { label: 'Status',        value: '501(c)(3) Nonprofit' },
-                    { label: 'Founded',       value: '2019' },
-                    { label: 'Jurisdiction',  value: 'Washington, DC' },
-                    { label: 'Disbursement',  value: 'ACH Direct Transfer' },
-                  ].map(row => (
-                    <div key={row.label} className="flex justify-between items-center py-2.5"
-                      style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                      <span className="text-xs font-medium text-white/40">{row.label}</span>
-                      <span className="text-sm font-semibold text-white">{row.value}</span>
-                    </div>
-                  ))}
+                {/* Org info overlay at bottom */}
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <div className="space-y-2.5">
+                    {[
+                      { label: 'Legal Name',   value: 'RiseAxis Capital Funding Program' },
+                      { label: 'EIN',          value: '27-0964813' },
+                      { label: 'Status',       value: '501(c)(3) Nonprofit' },
+                      { label: 'Founded',      value: '2019' },
+                      { label: 'Jurisdiction', value: 'Washington, DC' },
+                      { label: 'Disbursement', value: 'ACH Direct Transfer' },
+                    ].map(row => (
+                      <div key={row.label} className="flex justify-between items-center py-1.5"
+                        style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                        <span className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>{row.label}</span>
+                        <span className="text-xs font-semibold text-white">{row.value}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </FadeUp>
