@@ -419,6 +419,77 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Banner ───────────────────────────────────────── */}
+      <section className="relative overflow-hidden" style={{ height: '420px' }}>
+        {/* Photo */}
+        <img
+          src="/banner.webp"
+          alt="Grant recipients at work"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
+        {/* Dark gradient overlay */}
+        <div className="absolute inset-0"
+          style={{ background: 'linear-gradient(90deg, rgba(15,23,42,0.82) 0%, rgba(15,23,42,0.55) 55%, rgba(15,23,42,0.18) 100%)' }} />
+
+        {/* Content */}
+        <div className="relative h-full max-w-[1440px] mx-auto px-5 lg:px-8 flex flex-col justify-center">
+          <motion.div initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }} transition={{ duration: 0.6 }}>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
+              style={{ background: 'rgba(22,163,74,0.2)', border: '1px solid rgba(22,163,74,0.4)' }}>
+              <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#4ADE80' }} />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-green-400">Funding Real Americans</span>
+            </div>
+
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-[1.1] mb-4 max-w-xl">
+              Empowering Those<br />
+              <span style={{
+                background: 'linear-gradient(135deg, #4ADE80 0%, #60A5FA 100%)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              }}>
+                Who Build America
+              </span>
+            </h2>
+
+            <p className="text-base leading-relaxed mb-8 max-w-md" style={{ color: 'rgba(255,255,255,0.65)' }}>
+              From small business owners to families facing hardship — our grants reach people across every industry and walk of life. No loans. No repayment. Just funding.
+            </p>
+
+            <div className="flex flex-wrap gap-3">
+              <Link to="/apply"
+                className="flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold text-white transition-all hover:scale-[1.02] hover:brightness-110"
+                style={{ background: 'linear-gradient(135deg, #16A34A, #15803D)', boxShadow: '0 6px 20px rgba(22,163,74,0.35)' }}>
+                Apply for a Grant <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link to="/programs"
+                className="flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold transition-all hover:bg-white/10"
+                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.85)' }}>
+                View Programs
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Stats strip at bottom */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <div className="max-w-[1440px] mx-auto px-5 lg:px-8">
+            <div className="flex flex-wrap gap-x-8 gap-y-2 pb-5">
+              {[
+                { value: '6', label: 'Grant Programs' },
+                { value: '$2.4M+', label: 'Total Disbursed' },
+                { value: '5–10', label: 'Days to Decision' },
+                { value: '0', label: 'Application Fees' },
+              ].map(s => (
+                <div key={s.label} className="flex items-center gap-2.5">
+                  <div className="text-lg font-black text-white">{s.value}</div>
+                  <div className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.45)' }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Testimonials ─────────────────────────────────── */}
       <section className="py-20" style={{ background: G.page }}>
         <div className="max-w-[1440px] mx-auto px-5 lg:px-8">
