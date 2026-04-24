@@ -607,6 +607,127 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Who We Help ──────────────────────────────────── */}
+      <section className="py-20" style={{ background: G.white }}>
+        <div className="max-w-[1440px] mx-auto px-5 lg:px-8">
+          <div className="text-center mb-12">
+            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <div className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: G.green }}>Grant Recipients</div>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-3" style={{ color: G.heading }}>Who We Help</h2>
+              <p className="text-sm max-w-md mx-auto" style={{ color: G.body }}>
+                From family farms to construction crews — our grants reach Americans in every industry who face genuine financial need.
+              </p>
+            </motion.div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+            {/* Agriculture card */}
+            <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }} transition={{ duration: 0.55 }}
+              className="relative rounded-3xl overflow-hidden group" style={{ height: '420px' }}>
+              <img src="/farmers.webp" alt="Agricultural grant recipients"
+                className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
+              {/* Gradient overlay */}
+              <div className="absolute inset-0"
+                style={{ background: 'linear-gradient(180deg, rgba(15,23,42,0.08) 0%, rgba(15,23,42,0.35) 50%, rgba(15,23,42,0.88) 100%)' }} />
+
+              {/* Top badge */}
+              <div className="absolute top-5 left-5">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-bold"
+                  style={{ background: 'rgba(22,163,74,0.25)', border: '1px solid rgba(22,163,74,0.5)', color: '#4ADE80', backdropFilter: 'blur(8px)' }}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  Agriculture & Farming
+                </div>
+              </div>
+
+              {/* Bottom content */}
+              <div className="absolute bottom-0 left-0 right-0 p-7">
+                <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                  Community Development · Business Funding
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2 leading-tight">
+                  Supporting American<br />Farmers & Growers
+                </h3>
+                <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  Equipment, operational costs, and emergency relief for agricultural families keeping local food systems alive.
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <div className="text-xl font-black text-white">$25K</div>
+                    <div className="text-[10px] font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>Max Award</div>
+                  </div>
+                  <div className="w-px h-8" style={{ background: 'rgba(255,255,255,0.15)' }} />
+                  <div className="text-center">
+                    <div className="text-xl font-black text-white">10–14</div>
+                    <div className="text-[10px] font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>Days Review</div>
+                  </div>
+                  <div className="ml-auto">
+                    <Link to="/apply"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:brightness-110"
+                      style={{ background: 'linear-gradient(135deg, #16A34A, #15803D)', boxShadow: '0 4px 16px rgba(22,163,74,0.4)' }}>
+                      Apply <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Construction card */}
+            <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }} transition={{ duration: 0.55 }}
+              className="relative rounded-3xl overflow-hidden group" style={{ height: '420px' }}>
+              <img src="/construction.webp" alt="Construction workers grant recipients"
+                className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
+              {/* Gradient overlay */}
+              <div className="absolute inset-0"
+                style={{ background: 'linear-gradient(180deg, rgba(15,23,42,0.08) 0%, rgba(15,23,42,0.35) 50%, rgba(15,23,42,0.88) 100%)' }} />
+
+              {/* Top badge */}
+              <div className="absolute top-5 left-5">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-bold"
+                  style={{ background: 'rgba(37,99,235,0.25)', border: '1px solid rgba(37,99,235,0.5)', color: '#60A5FA', backdropFilter: 'blur(8px)' }}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                  Construction & Trades
+                </div>
+              </div>
+
+              {/* Bottom content */}
+              <div className="absolute bottom-0 left-0 right-0 p-7">
+                <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                  Business Funding · Emergency Assistance
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2 leading-tight">
+                  Funding the Builders<br />of Our Communities
+                </h3>
+                <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  Start-up capital, equipment grants, and hardship relief for contractors, tradespeople, and construction crews.
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <div className="text-xl font-black text-white">$50K</div>
+                    <div className="text-[10px] font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>Max Award</div>
+                  </div>
+                  <div className="w-px h-8" style={{ background: 'rgba(255,255,255,0.15)' }} />
+                  <div className="text-center">
+                    <div className="text-xl font-black text-white">10–15</div>
+                    <div className="text-[10px] font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>Days Review</div>
+                  </div>
+                  <div className="ml-auto">
+                    <Link to="/apply"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:brightness-110"
+                      style={{ background: 'linear-gradient(135deg, #2563EB, #1D4ED8)', boxShadow: '0 4px 16px rgba(37,99,235,0.4)' }}>
+                      Apply <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+          </div>
+        </div>
+      </section>
+
       {/* ── Two Ways to Apply ────────────────────────────── */}
       <section className="py-20" style={{ background: G.white }}>
         <div className="max-w-[1440px] mx-auto px-5 lg:px-8">
