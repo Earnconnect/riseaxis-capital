@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, Plus, CreditCard, DollarSign, Users, Calendar, Eye } from 'lucide-react'
+import { Search, Plus, CreditCard, DollarSign, Users, Calendar, Eye, Download } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase'
@@ -61,11 +61,33 @@ export default function PaymentDashboard() {
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: T.heading }}>Payments</h1>
           <p className="text-sm mt-0.5" style={{ color: T.sub }}>Manage proof of payment receipts</p>
         </motion.div>
-        <Link to="/admin/payments/new"
-          className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:brightness-105"
-          style={{ background: 'linear-gradient(135deg, #16A34A, #15803D)', boxShadow: '0 4px 14px rgba(22,163,74,0.25)' }}>
-          <Plus className="w-4 h-4" /> Create Receipt
-        </Link>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button onClick={() => {
+            const rows = filtered.map(r => ({
+              transaction_id: r.transaction_id, recipient_name: r.recipient_name,
+              recipient_email: r.recipient_email, amount: r.amount,
+              payment_method: r.payment_method, bank_name: r.bank_name,
+              status: r.status, issued_at: r.issued_at?.slice(0,10),
+            }))
+            if (!rows.length) return
+            const headers = Object.keys(rows[0])
+            const csv = [headers, ...rows.map(r => headers.map(h => `"${(r as Record<string,unknown>)[h] ?? ''}"`))]
+              .map(r => r.join(',')).join('\n')
+            const a = document.createElement('a')
+            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
+            a.download = `payments-${new Date().toISOString().slice(0,10)}.csv`
+            a.click()
+          }}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition-all hover:bg-slate-100"
+            style={{ color: T.sub, border: `1px solid ${T.border}` }}>
+            <Download size={13} /> Export CSV
+          </button>
+          <Link to="/admin/payments/new"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:brightness-105"
+            style={{ background: 'linear-gradient(135deg, #16A34A, #15803D)', boxShadow: '0 4px 14px rgba(22,163,74,0.25)' }}>
+            <Plus className="w-4 h-4" /> Create Receipt
+          </Link>
+        </div>
       </div>
 
       {/* KPI strip */}

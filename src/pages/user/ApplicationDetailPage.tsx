@@ -530,7 +530,13 @@ function DocumentsTab({ app, docs, setDocs, user, profile }: {
       .from('grant-documents').upload(path, file, { contentType: file.type })
 
     if (uploadErr2) {
-      setUploadErr('Upload failed — please try again or contact support.')
+      const msg = uploadErr2.message || ''
+      if (msg.includes('Bucket not found') || msg.includes('bucket'))
+        setUploadErr('Storage not configured. Please contact support.')
+      else if (msg.includes('policy') || msg.includes('unauthorized') || msg.includes('403'))
+        setUploadErr('Permission denied. Please contact support.')
+      else
+        setUploadErr(`Upload failed: ${msg || 'please try again or contact support.'}`)
       setUploading(false); return
     }
 

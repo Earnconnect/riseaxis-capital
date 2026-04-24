@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Search, ChevronRight, FileText, Clock, CheckCircle2, DollarSign, RefreshCw, Filter } from 'lucide-react'
+import { Search, ChevronRight, FileText, Clock, CheckCircle2, DollarSign, RefreshCw, Download, Filter } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase'
@@ -82,11 +82,33 @@ export default function ApplicationsDashboard() {
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: T.heading }}>Grant Applications</h1>
           <p className="text-sm mt-0.5" style={{ color: T.sub }}>Review and manage all submitted grant applications</p>
         </motion.div>
-        <button onClick={fetchApps}
-          className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition-all hover:bg-slate-100"
-          style={{ color: T.sub, border: `1px solid ${T.border}` }}>
-          <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => {
+            const rows = filtered.map(a => ({
+              app_number: a.app_number, full_name: a.full_name, email: a.email,
+              grant_program: a.grant_program, requested_amount: a.requested_amount,
+              approved_amount: a.approved_amount ?? '', status: a.status,
+              submitted: a.created_at?.slice(0,10), city: a.city ?? '', state: a.state ?? '',
+            }))
+            if (!rows.length) return
+            const headers = Object.keys(rows[0])
+            const csv = [headers, ...rows.map(r => headers.map(h => `"${(r as Record<string,unknown>)[h] ?? ''}"`))]
+              .map(r => r.join(',')).join('\n')
+            const a = document.createElement('a')
+            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
+            a.download = `applications-${new Date().toISOString().slice(0,10)}.csv`
+            a.click()
+          }}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition-all hover:bg-slate-100"
+            style={{ color: T.sub, border: `1px solid ${T.border}` }}>
+            <Download size={13} /> Export CSV
+          </button>
+          <button onClick={fetchApps}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition-all hover:bg-slate-100"
+            style={{ color: T.sub, border: `1px solid ${T.border}` }}>
+            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* KPI strip */}

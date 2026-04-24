@@ -4,7 +4,7 @@ import {
   ChevronLeft, CheckCircle2, XCircle, Clock, Send,
   Plus, Trash2, Edit2, Loader2, DollarSign, User,
   MapPin, CreditCard, Briefcase, FileText, Bell,
-  CheckSquare, AlertTriangle,
+  CheckSquare, AlertTriangle, Upload, Download,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -36,10 +36,14 @@ function statusVariant(status: string): Parameters<typeof Badge>[0]['variant'] {
 export default function ReviewApplicationPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  interface AppDoc { id: string; name: string; doc_type: string; file_path: string; file_size: number; status: 'uploaded'|'verified'|'rejected'; uploaded_at: string }
+
   const [app, setApp]           = useState<GrantApplication | null>(null)
   const [milestones, setMilestones] = useState<Milestone[]>([])
+  const [docs, setDocs]         = useState<AppDoc[]>([])
   const [loading, setLoading]   = useState(true)
   const [saving, setSaving]     = useState(false)
+  const [docSaving, setDocSaving] = useState<string | null>(null)
 
   const [approveOpen,   setApproveOpen]   = useState(false)
   const [rejectOpen,    setRejectOpen]    = useState(false)
@@ -57,9 +61,10 @@ export default function ReviewApplicationPage() {
 
   async function fetchApp() {
     if (!id) return
-    const [appRes, msRes] = await Promise.all([
+    const [appRes, msRes, docsRes] = await Promise.all([
       supabase.from('grant_applications').select('*').eq('id', id).single(),
       supabase.from('milestones').select('*').eq('application_id', id).order('created_at'),
+      supabase.from('app_documents').select('*').eq('application_id', id).order('uploaded_at', { ascending: false }),
     ])
     if (appRes.data) {
       setApp(appRes.data as GrantApplication)
@@ -67,7 +72,30 @@ export default function ReviewApplicationPage() {
       setReviewerNotes(appRes.data.reviewer_notes || '')
     }
     if (msRes.data) setMilestones(msRes.data as Milestone[])
+    if (docsRes.data) setDocs(docsRes.data as AppDoc[])
     setLoading(false)
+  }
+
+  async function reviewDoc(doc: AppDoc, status: 'verified' | 'rejected') {
+    if (!app) return
+    setDocSaving(doc.id)
+    await supabase.from('app_documents').update({ status }).eq('id', doc.id)
+    setDocs(prev => prev.map(d => d.id === doc.id ? { ...d, status } : d))
+    await supabase.from('notifications').insert({
+      user_id: app.user_id,
+      type: 'documents_requested',
+      title: status === 'verified' ? 'Document Verified' : 'Document Needs Attention',
+      message: status === 'verified'
+        ? `Your document "${doc.name}" has been verified for application ${app.app_number}.`
+        : `Your document "${doc.name}" was not accepted for application ${app.app_number}. Please re-upload.`,
+      application_id: app.id,
+    })
+    setDocSaving(null)
+  }
+
+  async function downloadDoc(doc: AppDoc) {
+    const { data } = await supabase.storage.from('grant-documents').createSignedUrl(doc.file_path, 60)
+    if (data?.signedUrl) window.open(data.signedUrl, '_blank')
   }
 
   async function updateStatus(status: string, extra: Record<string, unknown> = {}) {
@@ -361,6 +389,57 @@ export default function ReviewApplicationPage() {
               )}
             </Section>
           )}
+
+          {/* Documents Review */}
+          <Section title={`Uploaded Documents (${docs.length})`} icon={Upload}>
+            {docs.length === 0 ? (
+              <p className="text-xs py-2" style={{ color: T.muted }}>No documents uploaded yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {docs.map(doc => {
+                  const sc = { uploaded: '#D97706', verified: '#16A34A', rejected: '#DC2626' }[doc.status]
+                  const sb = { uploaded: '#FFFBEB', verified: '#F0FDF4', rejected: '#FEF2F2' }[doc.status]
+                  const sd = { uploaded: '#FDE68A', verified: '#BBF7D0', rejected: '#FECACA' }[doc.status]
+                  return (
+                    <div key={doc.id} className="flex items-center gap-3 p-3 rounded-xl"
+                      style={{ background: '#F8FAFC', border: `1px solid ${T.border}` }}>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold truncate" style={{ color: T.heading }}>{doc.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          <span className="text-[10px]" style={{ color: T.muted }}>{doc.doc_type}</span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            style={{ background: sb, color: sc, border: `1px solid ${sd}` }}>
+                            {doc.status}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button onClick={() => downloadDoc(doc)} title="Download"
+                          className="p-1.5 rounded-lg transition-all hover:bg-slate-200"
+                          style={{ color: T.muted }}>
+                          <Download size={13} />
+                        </button>
+                        {doc.status !== 'verified' && (
+                          <button onClick={() => reviewDoc(doc, 'verified')} disabled={docSaving === doc.id}
+                            className="px-2 py-1 rounded-lg text-[10px] font-bold transition-all"
+                            style={{ background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0' }}>
+                            {docSaving === doc.id ? '…' : '✓ Verify'}
+                          </button>
+                        )}
+                        {doc.status !== 'rejected' && (
+                          <button onClick={() => reviewDoc(doc, 'rejected')} disabled={docSaving === doc.id}
+                            className="px-2 py-1 rounded-lg text-[10px] font-bold transition-all"
+                            style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}>
+                            {docSaving === doc.id ? '…' : '✗ Reject'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </Section>
         </div>
 
         {/* Right sidebar */}

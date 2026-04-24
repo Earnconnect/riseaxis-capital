@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, FileText, MessageSquare, Bell,
   Settings, LogOut, Menu, X, Plus, ChevronDown,
-  HelpCircle, ClipboardList,
+  HelpCircle, ClipboardList, UserCircle,
   ChevronRight, ExternalLink,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -18,7 +18,8 @@ const NAV_MAIN = [
   { to: '/notifications',  icon: Bell,            label: 'Notifications',    exact: false },
 ]
 const NAV_ACCOUNT = [
-  { to: '/settings', icon: Settings, label: 'Settings', exact: false },
+  { to: '/profile',  icon: UserCircle, label: 'My Profile', exact: false },
+  { to: '/settings', icon: Settings,   label: 'Settings',   exact: false },
 ]
 
 const PAGE_TITLES: Record<string, string> = {
@@ -28,6 +29,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/apply/chat':    'AI Assistant',
   '/notifications': 'Notifications',
   '/settings':      'Account Settings',
+  '/profile':       'My Profile',
 }
 
 export default function UserLayout() {
@@ -182,6 +184,13 @@ export default function UserLayout() {
                 className="absolute bottom-full left-0 right-0 mb-2 rounded-xl overflow-hidden z-50"
                 style={{ background: '#1E293B', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 -8px 32px rgba(0,0,0,0.4)' }}>
                 <div className="p-2 space-y-0.5">
+                  <Link to="/profile" onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] transition-all"
+                    style={{ color: 'rgba(255,255,255,0.65)' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = '#fff' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)' }}>
+                    <UserCircle size={12} /> My Profile
+                  </Link>
                   <Link to="/settings" onClick={() => setUserMenuOpen(false)}
                     className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] transition-all"
                     style={{ color: 'rgba(255,255,255,0.65)' }}

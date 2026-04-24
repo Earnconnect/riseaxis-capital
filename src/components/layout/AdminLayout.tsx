@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, CreditCard, LogOut,
   Menu, X, ShieldCheck, ChevronDown,
-  FileText, ExternalLink, HelpCircle, ChevronRight,
+  FileText, ExternalLink, HelpCircle, ChevronRight, Users,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
@@ -13,12 +13,14 @@ const NAV = [
   { to: '/admin',              icon: LayoutDashboard, label: 'Overview',      exact: true },
   { to: '/admin/applications', icon: FileText,         label: 'Applications',  exact: false },
   { to: '/admin/payments',     icon: CreditCard,       label: 'Payments',      exact: false },
+  { to: '/admin/users',        icon: Users,            label: 'Users',         exact: false },
 ]
 
 const PAGE_TITLES: Record<string, string> = {
   '/admin':              'Overview',
   '/admin/applications': 'Applications',
   '/admin/payments':     'Payments',
+  '/admin/users':        'Users',
 }
 
 export default function AdminLayout() {
@@ -33,7 +35,7 @@ export default function AdminLayout() {
 
   useEffect(() => {
     supabase
-      .from('applications')
+      .from('grant_applications')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'pending')
       .then(({ count }) => setPendingCount(count ?? 0))
