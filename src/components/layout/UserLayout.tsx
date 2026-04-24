@@ -4,7 +4,7 @@ import {
   LayoutDashboard, FileText, MessageSquare, Bell,
   Settings, LogOut, Menu, X, Plus, ChevronDown,
   HelpCircle, ClipboardList, UserCircle, Wallet,
-  ChevronRight, ExternalLink,
+  ChevronRight, ExternalLink, Megaphone,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
@@ -43,6 +43,8 @@ export default function UserLayout() {
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   const [unreadCount, setUnreadCount] = useState(0)
+  const [announcement, setAnnouncement] = useState<{ message: string; type: string } | null>(null)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
 
   const initials   = profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U'
   const firstName  = profile?.full_name?.split(' ')[0] || 'there'
@@ -59,6 +61,18 @@ export default function UserLayout() {
       .eq('read', false)
       .then(({ count }) => setUnreadCount(count ?? 0))
   }, [profile, location.pathname])
+
+  useEffect(() => {
+    supabase
+      .from('announcements')
+      .select('message, type')
+      .eq('active', true)
+      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => { if (data) setAnnouncement(data as { message: string; type: string }) })
+  }, [])
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? location.pathname === to : location.pathname === to || location.pathname.startsWith(to + '/')
@@ -301,6 +315,30 @@ export default function UserLayout() {
             </div>
           </div>
         </header>
+
+        {/* Announcement Banner */}
+        <AnimatePresence>
+          {announcement && !bannerDismissed && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
+              className="flex items-center justify-between gap-3 px-5 lg:px-8 py-2.5"
+              style={{
+                background: announcement.type === 'warning' ? '#FFFBEB' : announcement.type === 'success' ? '#F0FDF4' : '#EFF6FF',
+                borderBottom: `1px solid ${announcement.type === 'warning' ? '#FDE68A' : announcement.type === 'success' ? '#BBF7D0' : '#BFDBFE'}`,
+              }}>
+              <div className="flex items-center gap-2">
+                <Megaphone size={13} style={{ color: announcement.type === 'warning' ? '#D97706' : announcement.type === 'success' ? '#16A34A' : '#2563EB', flexShrink: 0 }} />
+                <p className="text-xs font-semibold" style={{ color: announcement.type === 'warning' ? '#92400E' : announcement.type === 'success' ? '#166534' : '#1E3A5F' }}>
+                  {announcement.message}
+                </p>
+              </div>
+              <button onClick={() => setBannerDismissed(true)} className="shrink-0 p-0.5 rounded hover:bg-black/5 transition-colors">
+                <X size={12} style={{ color: '#94A3B8' }} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Page content */}
         <main className="flex-1">

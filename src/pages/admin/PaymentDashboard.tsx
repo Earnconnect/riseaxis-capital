@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, Plus, CreditCard, DollarSign, Users, Calendar, Eye, Download } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase'
 import { formatCurrency, formatDateShort } from '@/lib/utils'
@@ -111,6 +112,77 @@ export default function PaymentDashboard() {
           </motion.div>
         ))}
       </div>
+
+      {/* Analytics Charts */}
+      {receipts.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Monthly trend */}
+          <div className="lg:col-span-2 rounded-2xl p-5"
+            style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div className="text-sm font-bold mb-1" style={{ color: T.heading }}>Monthly Disbursements</div>
+            <div className="text-xs mb-4" style={{ color: T.muted }}>Total amounts paid out per month (last 6 months)</div>
+            <ResponsiveContainer width="100%" height={140}>
+              <AreaChart data={(() => {
+                const months: Record<string, number> = {}
+                for (let i = 5; i >= 0; i--) {
+                  const d = new Date(); d.setMonth(d.getMonth() - i)
+                  const key = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+                  months[key] = 0
+                }
+                receipts.forEach(r => {
+                  const d = new Date(r.created_at)
+                  const key = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+                  if (key in months) months[key] += r.amount
+                })
+                return Object.entries(months).map(([month, amount]) => ({ month, amount }))
+              })()} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                <XAxis dataKey="month" tick={{ fontSize: 10, fill: T.muted }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: T.muted }} axisLine={false} tickLine={false}
+                  tickFormatter={v => v >= 1000 ? `$${(v/1000).toFixed(0)}k` : `$${v}`} />
+                <Tooltip
+                  contentStyle={{ fontSize: 12, borderRadius: 10, border: `1px solid ${T.border}` }}
+                  formatter={(v: number) => [formatCurrency(v), 'Disbursed']} />
+                <Area type="monotone" dataKey="amount" stroke={T.green} fill="#F0FDF4" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Payment method pie */}
+          <div className="rounded-2xl p-5"
+            style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div className="text-sm font-bold mb-1" style={{ color: T.heading }}>Payment Methods</div>
+            <div className="text-xs mb-4" style={{ color: T.muted }}>Breakdown of payment types</div>
+            {(() => {
+              const map: Record<string, number> = {}
+              receipts.forEach(r => { const k = r.payment_method || 'Other'; map[k] = (map[k] || 0) + 1 })
+              const data = Object.entries(map).map(([name, value]) => ({ name, value }))
+              const colors = ['#16A34A', '#2563EB', '#7C3AED', '#F59E0B', '#EF4444']
+              return (
+                <>
+                  <ResponsiveContainer width="100%" height={100}>
+                    <PieChart>
+                      <Pie data={data} cx="50%" cy="50%" innerRadius={28} outerRadius={44} dataKey="value" paddingAngle={3}>
+                        {data.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="space-y-1.5 mt-2">
+                    {data.map((d, i) => (
+                      <div key={d.name} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2 h-2 rounded-full" style={{ background: colors[i % colors.length] }} />
+                          <span style={{ color: T.sub }} className="capitalize">{d.name}</span>
+                        </div>
+                        <span className="font-bold" style={{ color: T.heading }}>{d.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )
+            })()}
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <div className="rounded-2xl p-4"

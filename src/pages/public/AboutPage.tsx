@@ -220,6 +220,40 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* ── Leadership ──────────────────────────────────── */}
+      <section className="py-20">
+        <div className="max-w-[1440px] mx-auto px-5 lg:px-8">
+          <FadeUp>
+            <div className="text-center mb-12">
+              <div className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: G.green }}>Our Team</div>
+              <h2 className="text-3xl font-bold tracking-tight mb-3" style={{ color: G.heading }}>Leadership</h2>
+              <p className="text-sm max-w-md mx-auto" style={{ color: G.body }}>
+                Experienced professionals committed to responsible, transparent grant stewardship.
+              </p>
+            </div>
+          </FadeUp>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              { name: 'Patricia W.', title: 'Executive Director', bio: 'Former USDA grant administrator with 18 years in federal nonprofit compliance and community development funding.', initials: 'PW', color: '#16A34A', bg: '#F0FDF4' },
+              { name: 'Marcus J.', title: 'Director of Operations', bio: 'Certified Public Accountant specializing in nonprofit financial management and IRS Form 990 compliance.', initials: 'MJ', color: '#2563EB', bg: '#EFF6FF' },
+              { name: 'Sandra H.', title: 'Grants Manager', bio: 'Oversees application review and disbursement across all six programs. Previously with the HUD Community Block Grant program.', initials: 'SH', color: '#7C3AED', bg: '#F5F3FF' },
+              { name: 'David L.', title: 'Compliance Officer', bio: 'Attorney with expertise in 501(c)(3) governance, GDPR, and federal anti-fraud regulations protecting grant recipients.', initials: 'DL', color: '#D97706', bg: '#FFFBEB' },
+            ].map((member, i) => (
+              <FadeUp key={member.name} delay={i * 0.08}>
+                <div className="rounded-2xl p-6 h-full transition-all hover:-translate-y-1 hover:shadow-md"
+                  style={{ background: G.white, border: `1px solid ${G.border}` }}>
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold text-white mb-4"
+                    style={{ background: member.color }}>{member.initials}</div>
+                  <div className="text-sm font-bold mb-0.5" style={{ color: G.heading }}>{member.name}</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide mb-3" style={{ color: member.color }}>{member.title}</div>
+                  <p className="text-xs leading-relaxed" style={{ color: G.body }}>{member.bio}</p>
+                </div>
+              </FadeUp>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Programs ────────────────────────────────────── */}
       <section className="py-20">
         <div className="max-w-[1440px] mx-auto px-5 lg:px-8">

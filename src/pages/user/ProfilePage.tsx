@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { User, Mail, Phone, Calendar, Shield, FileText, CheckCircle2, DollarSign, ChevronRight, Save, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
+import { User, Mail, Phone, Calendar, Shield, FileText, CheckCircle2, DollarSign, ChevronRight, Save, Loader2, AlertCircle, CheckCircle, Lock, KeyRound } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -24,9 +24,11 @@ export default function ProfilePage() {
 
   const [fullName, setFullName] = useState(profile?.full_name || '')
   const [phone, setPhone]       = useState(profile?.phone || '')
-  const [saving, setSaving]     = useState(false)
-  const [saved, setSaved]       = useState(false)
-  const [error, setError]       = useState('')
+  const [saving, setSaving]           = useState(false)
+  const [saved, setSaved]             = useState(false)
+  const [error, setError]             = useState('')
+  const [pwResetSent, setPwResetSent] = useState(false)
+  const [pwResetLoading, setPwResetLoading] = useState(false)
 
   const [apps, setApps] = useState<GrantApplication[]>([])
   const [loadingApps, setLoadingApps] = useState(true)
@@ -64,6 +66,14 @@ export default function ProfilePage() {
     if (err) { setError(err.message); return }
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
+  }
+
+  async function handlePasswordReset() {
+    if (!user?.email) return
+    setPwResetLoading(true)
+    await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: window.location.origin + '/login' })
+    setPwResetLoading(false)
+    setPwResetSent(true)
   }
 
   const totalApps     = apps.length
@@ -288,6 +298,70 @@ export default function ProfilePage() {
             </Link>
           ))
         )}
+      </motion.div>
+
+      {/* Security Section */}
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
+        className="rounded-2xl overflow-hidden"
+        style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+        <div className="px-5 py-4 flex items-center gap-3" style={{ borderBottom: `1px solid ${T.border}`, background: '#F8FAFC' }}>
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+            <Lock size={14} style={{ color: '#2563EB' }} />
+          </div>
+          <div>
+            <div className="text-sm font-bold" style={{ color: T.heading }}>Security</div>
+            <div className="text-xs" style={{ color: T.muted }}>Manage your account security settings</div>
+          </div>
+          <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+            style={{ background: T.greenLt, color: T.green, border: `1px solid ${T.greenBd}` }}>
+            <CheckCircle2 size={9} /> Verified
+          </div>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { label: 'Account Status',    value: 'Active & Verified', icon: CheckCircle2, color: T.green, bg: T.greenLt },
+              { label: 'Encryption',        value: '256-bit SSL',       icon: Lock,         color: '#2563EB', bg: '#EFF6FF' },
+              { label: 'Member Since',      value: memberSince,         icon: Calendar,     color: '#7C3AED', bg: '#F5F3FF' },
+            ].map(item => (
+              <div key={item.label} className="flex items-center gap-3 px-4 py-3 rounded-xl"
+                style={{ background: '#F8FAFC', border: `1px solid ${T.border}` }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: item.bg }}>
+                  <item.icon size={13} style={{ color: item.color }} />
+                </div>
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: T.muted }}>{item.label}</div>
+                  <div className="text-xs font-bold" style={{ color: T.heading }}>{item.value}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-xl"
+            style={{ background: '#F8FAFC', border: `1px solid ${T.border}` }}>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#FEF3C7' }}>
+                <KeyRound size={13} style={{ color: '#D97706' }} />
+              </div>
+              <div>
+                <div className="text-xs font-bold" style={{ color: T.heading }}>Password</div>
+                <div className="text-[11px]" style={{ color: T.muted }}>Send a secure reset link to your email address</div>
+              </div>
+            </div>
+            {pwResetSent ? (
+              <div className="flex items-center gap-1.5 text-xs font-semibold shrink-0" style={{ color: T.green }}>
+                <CheckCircle size={13} /> Reset email sent!
+              </div>
+            ) : (
+              <button onClick={handlePasswordReset} disabled={pwResetLoading}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-all hover:brightness-105 shrink-0 disabled:opacity-60"
+                style={{ background: '#D97706' }}>
+                {pwResetLoading ? <Loader2 size={12} className="animate-spin" /> : <KeyRound size={12} />}
+                Change Password
+              </button>
+            )}
+          </div>
+        </div>
       </motion.div>
 
       {/* Official badges footer */}

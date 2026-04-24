@@ -283,6 +283,49 @@ export default function AdminOverview() {
         </CardBase>
       )}
 
+      {/* ── Conversion Funnel ─────────────────────────────────── */}
+      <CardBase className="p-5">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <div className="text-sm font-bold" style={{ color: T.heading }}>Application Funnel</div>
+            <div className="text-xs" style={{ color: T.muted }}>Conversion from submission to disbursement</div>
+          </div>
+          <div className="text-[10px] font-bold px-2.5 py-1 rounded-full" style={{ background: T.greenLt, color: T.green, border: `1px solid ${T.greenBd}` }}>
+            Live Data
+          </div>
+        </div>
+        <div className="space-y-3">
+          {[
+            { label: 'Applications Submitted', count: apps.length,         color: '#6366F1', bg: '#EEF2FF' },
+            { label: 'Under Review',           count: underReview.length,  color: '#F59E0B', bg: '#FFFBEB' },
+            { label: 'Approved',               count: approved.length,     color: '#16A34A', bg: '#F0FDF4' },
+            { label: 'Funds Disbursed',        count: disbursed.length,    color: '#7C3AED', bg: '#F5F3FF' },
+          ].map((step, i, arr) => {
+            const pct = arr[0].count > 0 ? Math.max(4, Math.round((step.count / arr[0].count) * 100)) : 0
+            const conv = i > 0 && arr[i - 1].count > 0 ? Math.round((step.count / arr[i - 1].count) * 100) : null
+            return (
+              <div key={step.label}>
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span className="font-medium" style={{ color: T.sub }}>{step.label}</span>
+                  <div className="flex items-center gap-3">
+                    {conv !== null && (
+                      <span className="text-[10px] font-bold" style={{ color: T.muted }}>{conv}% from prev.</span>
+                    )}
+                    <span className="font-bold" style={{ color: step.color }}>{step.count}</span>
+                  </div>
+                </div>
+                <div className="h-7 rounded-xl overflow-hidden" style={{ background: step.bg }}>
+                  <div className="h-full rounded-xl flex items-center px-3 text-[10px] font-bold text-white transition-all"
+                    style={{ width: `${pct}%`, background: step.color, minWidth: step.count > 0 ? '2.5rem' : 0 }}>
+                    {step.count > 0 ? `${pct}%` : ''}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </CardBase>
+
       {/* ── Needs Action + Recent ─────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 

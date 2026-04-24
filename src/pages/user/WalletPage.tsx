@@ -4,7 +4,7 @@ import {
   Wallet, ArrowDownToLine, CreditCard, Building2,
   DollarSign, TrendingDown, TrendingUp, X, Loader2, AlertCircle,
   CheckCircle2, Clock, XCircle, Shield, ChevronDown, Lock,
-  RefreshCw, Info, FileText, Landmark, Star, Eye, EyeOff,
+  RefreshCw, Info, FileText, Landmark, Star, Eye, EyeOff, Download,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -85,6 +85,56 @@ export default function WalletPage() {
   // Masked account number derived from user id
   const maskedAcct = user ? `••••${user.id.slice(-4).toUpperCase()}` : '••••'
   const acctNumber = user ? `RAC-${user.id.slice(0, 8).toUpperCase()}` : '—'
+
+  function handleDownloadStatement() {
+    const rows = txns.map(t => {
+      const date = new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      const type = t.type === 'credit' ? 'CREDIT' : 'WITHDRAWAL'
+      const sign = t.type === 'credit' ? '+' : '-'
+      const status = t.status.toUpperCase()
+      return `  ${date.padEnd(16)} ${type.padEnd(14)} ${(sign + formatCurrency(t.amount)).padEnd(14)} ${status.padEnd(12)} ${t.description || ''}`
+    }).join('\n')
+
+    const text = [
+      '═══════════════════════════════════════════════════════════════════',
+      '  RISEAXIS CAPITAL — OFFICIAL WALLET STATEMENT',
+      '  501(c)(3) Nonprofit · EIN: 27-0964813 · Washington, DC',
+      '═══════════════════════════════════════════════════════════════════',
+      '',
+      `  Account ID  : ${acctNumber}`,
+      `  Account Name: ${profile?.full_name || 'Account Holder'}`,
+      `  Statement   : ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`,
+      `  Generated   : ${new Date().toLocaleString('en-US')}`,
+      '',
+      '───────────────────────────────────────────────────────────────────',
+      '  ACCOUNT SUMMARY',
+      '───────────────────────────────────────────────────────────────────',
+      `  Available Balance : ${formatCurrency(wallet?.balance ?? 0)}`,
+      `  Total Received    : ${formatCurrency(wallet?.total_received ?? 0)}`,
+      `  Total Withdrawn   : ${formatCurrency(wallet?.total_withdrawn ?? 0)}`,
+      '',
+      '───────────────────────────────────────────────────────────────────',
+      '  TRANSACTION HISTORY',
+      '───────────────────────────────────────────────────────────────────',
+      `  ${'DATE'.padEnd(16)} ${'TYPE'.padEnd(14)} ${'AMOUNT'.padEnd(14)} ${'STATUS'.padEnd(12)} DESCRIPTION`,
+      rows || '  No transactions found.',
+      '',
+      '───────────────────────────────────────────────────────────────────',
+      '  This statement is for informational purposes only. Transactions',
+      '  are processed by RiseAxis Capital Funding Program. Grants',
+      '  exceeding $600 per calendar year are reported on IRS Form',
+      '  1099-MISC by January 31 of the following year.',
+      '═══════════════════════════════════════════════════════════════════',
+    ].join('\n')
+
+    const blob = new Blob([text], { type: 'text/plain' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = `RiseAxis_Statement_${acctNumber}_${new Date().toISOString().slice(0, 10)}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   function resetForm() {
     setAmount(''); setBankName(''); setRouting(''); setAcctNum('')
@@ -287,14 +337,21 @@ export default function WalletPage() {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
         className="rounded-2xl overflow-hidden"
         style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-        <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${T.border}` }}>
+        <div className="px-5 py-4 flex items-center justify-between gap-3" style={{ borderBottom: `1px solid ${T.border}` }}>
           <div>
             <div className="font-bold text-sm" style={{ color: T.heading }}>Transfer Funds</div>
             <div className="text-xs mt-0.5" style={{ color: T.muted }}>Move your available balance to your personal bank account</div>
           </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
-            style={{ background: '#F0FDF4', color: T.green, border: '1px solid #BBF7D0' }}>
-            <Shield size={9} /> Admin Verified
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={handleDownloadStatement}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:bg-slate-100"
+              style={{ background: T.page, border: `1px solid ${T.border}`, color: T.sub }}>
+              <Download size={12} /> Statement
+            </button>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+              style={{ background: '#F0FDF4', color: T.green, border: '1px solid #BBF7D0' }}>
+              <Shield size={9} /> Admin Verified
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">

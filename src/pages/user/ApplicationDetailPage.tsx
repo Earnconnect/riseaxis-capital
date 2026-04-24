@@ -343,8 +343,63 @@ function OverviewTab({ app, milestones }: { app: GrantApplication; milestones: M
   const completedMs = milestones.filter(m => m.completed).length
   const pct = milestones.length > 0 ? Math.round((completedMs / milestones.length) * 100) : 0
 
+  const STAGES = [
+    { key: 'submitted',    label: 'Submitted',    sub: '1–2 days',  statuses: ['pending','under_review','approved','rejected','disbursed'] },
+    { key: 'under_review', label: 'Under Review', sub: '3–5 days',  statuses: ['under_review','approved','rejected','disbursed'] },
+    { key: 'decision',     label: 'Decision',     sub: '5–10 days', statuses: ['approved','rejected','disbursed'] },
+    { key: 'disbursement', label: 'Disbursement', sub: '1–2 days',  statuses: ['disbursed'] },
+    { key: 'funded',       label: 'Funded',       sub: 'Complete',  statuses: ['disbursed'] },
+  ]
+  const isRejected = app.status === 'rejected'
+  const currentIdx = isRejected ? 2 : STAGES.findLastIndex(s => s.statuses.includes(app.status))
+
   return (
     <div className="space-y-5">
+
+      {/* ── Application Timeline Stepper ── */}
+      <div className="rounded-2xl p-5" style={{ background: T.white, boxShadow: T.card }}>
+        <div className="text-[10px] font-bold uppercase tracking-widest mb-5" style={{ color: T.muted }}>
+          Application Progress
+        </div>
+        <div className="flex items-start">
+          {STAGES.map((stage, i) => {
+            const done    = !isRejected && stage.statuses.includes(app.status)
+            const current = i === currentIdx
+            const rejected = isRejected && i === 2
+            return (
+              <div key={stage.key} className="flex items-start flex-1">
+                <div className="flex flex-col items-center w-full">
+                  {/* Circle */}
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-[12px] transition-all"
+                    style={{
+                      background: rejected ? '#FEF2F2' : done ? '#F0FDF4' : current && !isRejected ? '#EFF6FF' : T.bg,
+                      border: `2px solid ${rejected ? '#EF4444' : done ? '#16A34A' : current && !isRejected ? '#2563EB' : T.border}`,
+                      color: rejected ? '#EF4444' : done ? '#16A34A' : current && !isRejected ? '#2563EB' : T.muted,
+                      boxShadow: current ? `0 0 0 4px ${isRejected ? '#FEE2E2' : '#DBEAFE'}` : 'none',
+                    }}>
+                    {rejected ? <XCircle size={16} style={{ color: '#EF4444' }} />
+                      : done ? <CheckCircle2 size={16} style={{ color: '#16A34A' }} />
+                      : <span>{i + 1}</span>}
+                  </div>
+                  {/* Label */}
+                  <div className="text-center mt-2 px-1">
+                    <div className="text-[11px] font-bold" style={{ color: rejected && i === 2 ? '#EF4444' : done || (current && !isRejected) ? T.head : T.muted }}>
+                      {rejected && i === 2 ? 'Rejected' : stage.label}
+                    </div>
+                    <div className="text-[10px]" style={{ color: T.muted }}>{stage.sub}</div>
+                  </div>
+                </div>
+                {/* Connector */}
+                {i < STAGES.length - 1 && (
+                  <div className="flex-shrink-0 h-0.5 w-full mt-[18px]"
+                    style={{ background: (!isRejected && STAGES[i + 1].statuses.includes(app.status)) ? '#16A34A' : T.border }} />
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
       {/* Rejection notice */}
       {app.status === 'rejected' && (
         <div className="rounded-2xl p-5" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>

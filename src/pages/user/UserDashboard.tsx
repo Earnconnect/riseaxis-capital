@@ -162,6 +162,47 @@ export default function UserDashboard() {
         ))}
       </div>
 
+      {/* ══ 3b. DECISION COUNTDOWN ═══════════════════════════ */}
+      {latest?.status === 'under_review' && (() => {
+        const submitted = new Date(latest.created_at)
+        const decisionDate = new Date(submitted.getTime() + 7 * 24 * 60 * 60 * 1000)
+        const now = new Date()
+        const daysLeft = Math.max(0, Math.ceil((decisionDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+        const totalDays = 7
+        const elapsed = Math.min(totalDays, totalDays - daysLeft)
+        const pct = Math.round((elapsed / totalDays) * 100)
+        return (
+          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 rounded-2xl"
+            style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#DBEAFE' }}>
+                <Calendar size={16} style={{ color: '#2563EB' }} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold" style={{ color: '#1E3A5F' }}>
+                  {daysLeft === 0 ? 'Decision due today' : `Decision expected within ${daysLeft} business day${daysLeft !== 1 ? 's' : ''}`}
+                </p>
+                <p className="text-xs" style={{ color: '#3B82F6' }}>
+                  Application #{latest.app_number} is under active review · Est. {decisionDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex-1 h-1.5 rounded-full" style={{ background: '#BFDBFE' }}>
+                    <div className="h-1.5 rounded-full transition-all" style={{ width: `${pct}%`, background: '#2563EB' }} />
+                  </div>
+                  <span className="text-[10px] font-bold" style={{ color: '#2563EB' }}>{pct}%</span>
+                </div>
+              </div>
+            </div>
+            <Link to={`/applications/${latest.id}`}
+              className="shrink-0 text-xs font-bold px-3.5 py-1.5 rounded-lg text-white transition-all hover:brightness-105"
+              style={{ background: '#2563EB' }}>
+              View Application
+            </Link>
+          </motion.div>
+        )
+      })()}
+
       {/* ══ 4. MAIN GRID ═════════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
 
