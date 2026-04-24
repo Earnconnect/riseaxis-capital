@@ -121,7 +121,7 @@ export default function UserDashboard() {
               <p className="text-xs" style={{ color: '#B45309' }}>Ensure all required documents are uploaded to avoid delays.</p>
             </div>
           </div>
-          <Link to="/apply"
+          <Link to={`/applications/${latest?.id}?tab=documents`}
             className="self-start sm:self-auto shrink-0 text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all hover:brightness-105"
             style={{ background: '#F59E0B', color: '#fff' }}>
             Take Action

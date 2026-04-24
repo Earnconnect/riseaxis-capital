@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft, FileText, MessageSquare, CheckSquare, Banknote,
@@ -100,13 +100,14 @@ export default function ApplicationDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { user, profile } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const [app, setApp]               = useState<GrantApplication | null>(null)
   const [milestones, setMilestones] = useState<Milestone[]>([])
   const [docs, setDocs]             = useState<AppDocument[]>([])
   const [messages, setMessages]     = useState<AppMessage[]>([])
   const [loading, setLoading]       = useState(true)
-  const [tab, setTab]               = useState<Tab>('overview')
+  const [tab, setTab]               = useState<Tab>((searchParams.get('tab') as Tab) || 'overview')
 
   useEffect(() => { if (id && user) load() }, [id, user])
 
