@@ -5,7 +5,7 @@ import {
   Settings, LogOut, Menu, X, Plus, ChevronDown,
   HelpCircle, ClipboardList, UserCircle, Wallet,
   ChevronRight, ExternalLink, Megaphone,
-  FolderOpen, LifeBuoy, Receipt, Activity,
+  LifeBuoy, Receipt, Activity,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
@@ -18,7 +18,6 @@ const NAV_MAIN = [
   { to: '/apply/chat',     icon: MessageSquare,   label: 'AI Assistant',     exact: false },
   { to: '/notifications',  icon: Bell,            label: 'Notifications',    exact: false },
   { to: '/wallet',         icon: Wallet,          label: 'My Wallet',        exact: false },
-  { to: '/documents',      icon: FolderOpen,      label: 'Documents',        exact: false },
   { to: '/activity',       icon: Activity,        label: 'Activity',         exact: false },
 ]
 const NAV_ACCOUNT = [
@@ -37,7 +36,6 @@ const PAGE_TITLES: Record<string, string> = {
   '/settings':      'Account Settings',
   '/profile':       'My Profile',
   '/wallet':        'My Wallet',
-  '/documents':     'Document Center',
   '/activity':      'Activity',
   '/tax-documents': 'Tax Documents',
   '/support':       'Help & Support',

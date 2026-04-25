@@ -39,7 +39,6 @@ import StoriesPage from '@/pages/public/StoriesPage'
 import SitemapPage from '@/pages/public/SitemapPage'
 
 // User portal additions
-import DocumentCenterPage from '@/pages/user/DocumentCenterPage'
 import SupportPage from '@/pages/user/SupportPage'
 import TaxDocumentsPage from '@/pages/user/TaxDocumentsPage'
 import ActivityPage from '@/pages/user/ActivityPage'
@@ -126,7 +125,6 @@ export default function App() {
             <Route path="/settings" element={<NotificationSettingsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/wallet"        element={<WalletPage />} />
-            <Route path="/documents"    element={<DocumentCenterPage />} />
             <Route path="/support"      element={<SupportPage />} />
             <Route path="/tax-documents" element={<TaxDocumentsPage />} />
             <Route path="/activity"     element={<ActivityPage />} />
