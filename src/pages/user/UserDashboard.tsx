@@ -78,10 +78,13 @@ export default function UserDashboard() {
 
   const profileFields = [
     { label: 'Full Name',    done: !!profile?.full_name },
-    { label: 'Phone Number', done: !!profile?.phone },
+    { label: 'Phone',        done: !!profile?.phone },
     { label: 'Date of Birth', done: !!profile?.date_of_birth },
     { label: 'SSN Last 4',   done: !!profile?.ssn_last4 },
     { label: 'Address',      done: !!profile?.address_line1 },
+    { label: 'City & State', done: !!(profile?.city && profile?.state) },
+    { label: 'ZIP Code',     done: !!profile?.zip_code },
+    { label: 'Emergency Contact', done: !!profile?.emergency_contact_name },
   ]
   const profilePct = Math.round((profileFields.filter(f => f.done).length / profileFields.length) * 100)
 

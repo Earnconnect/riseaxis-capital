@@ -38,6 +38,22 @@ export interface Profile {
   role: UserRole
   created_at: string
   updated_at: string
+  // Extended profile fields
+  date_of_birth?: string
+  ssn_last4?: string
+  citizenship?: string
+  marital_status?: string
+  employment_status?: string
+  annual_income?: number
+  address_line1?: string
+  address_line2?: string
+  city?: string
+  state?: string
+  zip_code?: string
+  years_at_address?: string
+  housing_status?: string
+  emergency_contact_name?: string
+  emergency_contact_phone?: string
 }
 
 export interface GrantApplication {
