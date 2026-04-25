@@ -37,6 +37,17 @@ import FraudWarningPage from '@/pages/public/FraudWarningPage'
 import AccessibilityPage from '@/pages/public/AccessibilityPage'
 import StoriesPage from '@/pages/public/StoriesPage'
 import SitemapPage from '@/pages/public/SitemapPage'
+
+// User portal additions
+import DocumentCenterPage from '@/pages/user/DocumentCenterPage'
+import SupportPage from '@/pages/user/SupportPage'
+import TaxDocumentsPage from '@/pages/user/TaxDocumentsPage'
+import ActivityPage from '@/pages/user/ActivityPage'
+
+// Admin portal additions
+import AnalyticsPage from '@/pages/admin/AnalyticsPage'
+import AuditLogPage from '@/pages/admin/AuditLogPage'
+import SupportTicketsPage from '@/pages/admin/SupportTicketsPage'
 import LoginPage from '@/pages/auth/LoginPage'
 import RegisterPage from '@/pages/auth/RegisterPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
@@ -114,7 +125,11 @@ export default function App() {
             <Route path="/applications/:id" element={<ApplicationDetailPage />} />
             <Route path="/settings" element={<NotificationSettingsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/wallet" element={<WalletPage />} />
+            <Route path="/wallet"        element={<WalletPage />} />
+            <Route path="/documents"    element={<DocumentCenterPage />} />
+            <Route path="/support"      element={<SupportPage />} />
+            <Route path="/tax-documents" element={<TaxDocumentsPage />} />
+            <Route path="/activity"     element={<ActivityPage />} />
           </Route>
 
           {/* Admin routes */}
@@ -132,7 +147,10 @@ export default function App() {
             <Route path="/admin/payments/new" element={<CreateReceiptPage />} />
             <Route path="/admin/payments/:id" element={<ViewReceiptPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
-            <Route path="/admin/withdrawals" element={<WithdrawalRequestsPage />} />
+            <Route path="/admin/withdrawals"  element={<WithdrawalRequestsPage />} />
+            <Route path="/admin/analytics"   element={<AnalyticsPage />} />
+            <Route path="/admin/audit-log"   element={<AuditLogPage />} />
+            <Route path="/admin/support"     element={<SupportTicketsPage />} />
           </Route>
 
           {/* 404 */}

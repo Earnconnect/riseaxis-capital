@@ -4,17 +4,21 @@ import {
   LayoutDashboard, CreditCard, LogOut,
   Menu, X, ShieldCheck, ChevronDown,
   FileText, ExternalLink, HelpCircle, ChevronRight, Users, ArrowDownToLine,
+  BarChart3, ClipboardList, LifeBuoy,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 
 const NAV = [
-  { to: '/admin',              icon: LayoutDashboard, label: 'Overview',      exact: true },
-  { to: '/admin/applications', icon: FileText,         label: 'Applications',  exact: false },
-  { to: '/admin/payments',     icon: CreditCard,       label: 'Payments',      exact: false },
-  { to: '/admin/users',        icon: Users,            label: 'Users',         exact: false },
-  { to: '/admin/withdrawals',  icon: ArrowDownToLine,  label: 'Withdrawals',   exact: false },
+  { to: '/admin',              icon: LayoutDashboard, label: 'Overview',       exact: true },
+  { to: '/admin/applications', icon: FileText,        label: 'Applications',   exact: false },
+  { to: '/admin/payments',     icon: CreditCard,      label: 'Payments',       exact: false },
+  { to: '/admin/users',        icon: Users,           label: 'Users',          exact: false },
+  { to: '/admin/withdrawals',  icon: ArrowDownToLine, label: 'Withdrawals',    exact: false },
+  { to: '/admin/analytics',    icon: BarChart3,       label: 'Analytics',      exact: false },
+  { to: '/admin/audit-log',    icon: ClipboardList,   label: 'Audit Log',      exact: false },
+  { to: '/admin/support',      icon: LifeBuoy,        label: 'Support Tickets',exact: false },
 ]
 
 const PAGE_TITLES: Record<string, string> = {
@@ -23,6 +27,9 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/payments':     'Payments',
   '/admin/users':        'Users',
   '/admin/withdrawals':  'Withdrawals',
+  '/admin/analytics':    'Analytics',
+  '/admin/audit-log':    'Audit Log',
+  '/admin/support':      'Support Tickets',
 }
 
 export default function AdminLayout() {

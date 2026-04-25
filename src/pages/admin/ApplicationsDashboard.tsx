@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Search, ChevronRight, FileText, Clock, CheckCircle2, DollarSign, RefreshCw, Download, Filter } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Search, ChevronRight, FileText, Clock, CheckCircle2, DollarSign, RefreshCw, Download, Filter, Square, CheckSquare, Loader2, XCircle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase'
 import { formatCurrency, formatDateShort, getGrantProgramLabel, getStatusLabel } from '@/lib/utils'
@@ -36,10 +36,12 @@ const KPI_DEFS = [
 
 export default function ApplicationsDashboard() {
   const [searchParams] = useSearchParams()
-  const [apps, setApps]       = useState<GrantApplication[]>([])
-  const [search, setSearch]   = useState('')
-  const [tab, setTab]         = useState(searchParams.get('status') || 'all')
-  const [loading, setLoading] = useState(true)
+  const [apps, setApps]         = useState<GrantApplication[]>([])
+  const [search, setSearch]     = useState('')
+  const [tab, setTab]           = useState(searchParams.get('status') || 'all')
+  const [loading, setLoading]   = useState(true)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [bulkBusy, setBulkBusy] = useState(false)
 
   useEffect(() => { fetchApps() }, [tab])
 
@@ -58,6 +60,28 @@ export default function ApplicationsDashboard() {
     a.app_number.toLowerCase().includes(search.toLowerCase()) ||
     a.email.toLowerCase().includes(search.toLowerCase())
   )
+
+  const allSelected = filtered.length > 0 && filtered.every(a => selected.has(a.id))
+
+  function toggleAll() {
+    if (allSelected) setSelected(new Set())
+    else setSelected(new Set(filtered.map(a => a.id)))
+  }
+
+  function toggleOne(id: string) {
+    const next = new Set(selected)
+    next.has(id) ? next.delete(id) : next.add(id)
+    setSelected(next)
+  }
+
+  async function handleBulkAction(status: string) {
+    if (!selected.size) return
+    setBulkBusy(true)
+    await supabase.from('grant_applications').update({ status }).in('id', Array.from(selected))
+    setSelected(new Set())
+    await fetchApps()
+    setBulkBusy(false)
+  }
 
   const counts = {
     all:         apps.length,
@@ -180,6 +204,37 @@ export default function ApplicationsDashboard() {
         </div>
       </div>
 
+      {/* Bulk action bar */}
+      <AnimatePresence>
+        {selected.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            className="rounded-2xl px-5 py-3 flex items-center gap-3 flex-wrap"
+            style={{ background: T.heading, border: `1px solid ${T.border}` }}>
+            <span className="text-sm font-semibold text-white">{selected.size} selected</span>
+            <div className="flex items-center gap-2 ml-auto flex-wrap">
+              {bulkBusy ? <Loader2 size={14} className="animate-spin text-white" /> : (
+                <>
+                  <button onClick={() => handleBulkAction('under_review')}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold text-white transition-all"
+                    style={{ background: '#D97706' }}>Mark In Review</button>
+                  <button onClick={() => handleBulkAction('approved')}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold text-white transition-all"
+                    style={{ background: '#16A34A' }}>Approve All</button>
+                  <button onClick={() => handleBulkAction('rejected')}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold text-white transition-all"
+                    style={{ background: '#DC2626' }}>Reject All</button>
+                  <button onClick={() => setSelected(new Set())}
+                    className="px-3 py-1.5 rounded-xl text-xs font-medium text-white/60 hover:text-white transition-colors">
+                    Clear
+                  </button>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Table / Cards */}
       <div className="rounded-2xl overflow-hidden"
         style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
@@ -245,6 +300,11 @@ export default function ApplicationsDashboard() {
               <table className="w-full text-sm min-w-[680px]">
                 <thead>
                   <tr style={{ borderBottom: `1px solid ${T.border}`, background: '#F8FAFC' }}>
+                    <th className="px-5 py-3">
+                      <button onClick={toggleAll} className="transition-colors" style={{ color: allSelected ? T.green : T.muted }}>
+                        {allSelected ? <CheckSquare size={14} /> : <Square size={14} />}
+                      </button>
+                    </th>
                     {['App Number','Applicant','Program','Requested','Status','Date',''].map(h => (
                       <th key={h} className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest" style={{ color: T.muted }}>{h}</th>
                     ))}
@@ -253,7 +313,12 @@ export default function ApplicationsDashboard() {
                 <tbody>
                   {filtered.map((app, i) => (
                     <tr key={app.id} className="group transition-colors hover:bg-slate-50"
-                      style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${T.border}` : 'none' }}>
+                      style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${T.border}` : 'none', background: selected.has(app.id) ? '#F0FDF4' : undefined }}>
+                      <td className="px-5 py-3.5">
+                        <button onClick={() => toggleOne(app.id)} style={{ color: selected.has(app.id) ? T.green : T.muted }}>
+                          {selected.has(app.id) ? <CheckSquare size={14} /> : <Square size={14} />}
+                        </button>
+                      </td>
                       <td className="px-5 py-3.5">
                         <span className="font-mono text-[11px] px-2 py-1 rounded-lg"
                           style={{ background: '#F1F5F9', color: T.sub }}>
