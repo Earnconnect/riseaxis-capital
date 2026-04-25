@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatCurrency, formatDateShort, getGrantProgramLabel, getStatusLabel } from '@/lib/utils'
 import type { GrantApplication, Wallet } from '@/types'
+import OnboardingModal from '@/components/ui/OnboardingModal'
 
 /* ── Tokens ───────────────────────────────────────────────── */
 const T = {
@@ -97,6 +98,7 @@ export default function UserDashboard() {
 
   return (
     <div className="px-5 lg:px-8 py-8 space-y-6 max-w-[1440px]" style={{ background: T.bg }}>
+      <OnboardingModal />
 
       {/* ══ 1. GREETING ══════════════════════════════════════ */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}

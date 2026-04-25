@@ -26,6 +26,8 @@ const QUICK_LINKS = [
   { label: 'Donate',          to: '/donate' },
   { label: 'Fraud Warning',   to: '/fraud-warning' },
   { label: 'Accessibility',   to: '/accessibility' },
+  { label: 'Success Stories', to: '/stories' },
+  { label: 'Sitemap',         to: '/sitemap' },
   { label: 'Sign In',         to: '/login' },
 ]
 

@@ -35,6 +35,8 @@ import CookieBanner from '@/components/ui/CookieBanner'
 import DonatePage from '@/pages/public/DonatePage'
 import FraudWarningPage from '@/pages/public/FraudWarningPage'
 import AccessibilityPage from '@/pages/public/AccessibilityPage'
+import StoriesPage from '@/pages/public/StoriesPage'
+import SitemapPage from '@/pages/public/SitemapPage'
 import LoginPage from '@/pages/auth/LoginPage'
 import RegisterPage from '@/pages/auth/RegisterPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
@@ -88,6 +90,8 @@ export default function App() {
             <Route path="/donate"       element={<DonatePage />} />
             <Route path="/fraud-warning" element={<FraudWarningPage />} />
             <Route path="/accessibility" element={<AccessibilityPage />} />
+            <Route path="/stories"       element={<StoriesPage />} />
+            <Route path="/sitemap"       element={<SitemapPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />

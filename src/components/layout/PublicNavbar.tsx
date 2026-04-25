@@ -24,6 +24,8 @@ const MORE_LINKS = [
   { to: '/partners',      label: 'Partners' },
   { to: '/donate',        label: 'Donate' },
   { to: '/fraud-warning', label: 'Fraud Warning' },
+  { to: '/stories',       label: 'Success Stories' },
+  { to: '/sitemap',       label: 'Sitemap' },
 ]
 
 export default function PublicNavbar() {
