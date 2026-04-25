@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
-  FolderOpen, Download, FileText, FileImage, File,
-  Search, Filter, Calendar, HardDrive, ExternalLink, Loader2,
+  FolderOpen, Download, FileText, FileImage, FileIcon,
+  Search, SlidersHorizontal, Calendar, HardDrive, ExternalLink, Loader2,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -36,7 +36,7 @@ function fileIcon(name: string) {
   const ext = name.split('.').pop()?.toLowerCase()
   if (ext === 'pdf') return <FileText size={16} style={{ color: '#DC2626' }} />
   if (['jpg','jpeg','png','webp','gif'].includes(ext ?? '')) return <FileImage size={16} style={{ color: '#2563EB' }} />
-  return <File size={16} style={{ color: '#64748B' }} />
+  return <FileIcon size={16} style={{ color: '#64748B' }} />
 }
 
 function formatBytes(bytes?: number) {
@@ -142,7 +142,7 @@ export default function DocumentCenterPage() {
         {[
           { label: 'Total Files',     value: docs.length,            icon: FolderOpen,  color: '#2563EB' },
           { label: 'Storage Used',    value: formatBytes(totalSize),  icon: HardDrive,   color: '#7C3AED' },
-          { label: 'Document Types',  value: docTypes.length - 1,    icon: Filter,      color: T.green },
+          { label: 'Document Types',  value: docTypes.length - 1,    icon: SlidersHorizontal, color: T.green },
         ].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
             className="rounded-2xl p-4 flex items-center gap-3" style={{ background: T.white, border: `1px solid ${T.border}` }}>
