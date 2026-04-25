@@ -50,6 +50,7 @@ export default function DocumentCenterPage() {
   const { user } = useAuth()
   const [docs, setDocs] = useState<DocWithApp[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [downloading, setDownloading] = useState<string | null>(null)
@@ -58,18 +59,42 @@ export default function DocumentCenterPage() {
     if (!user) return
     async function load() {
       setLoading(true)
-      const { data } = await supabase
+      setError('')
+
+      // Fetch documents
+      const { data: docsData, error: docsErr } = await supabase
         .from('app_documents')
-        .select('*, grant_applications(app_number, grant_program)')
+        .select('*')
         .eq('user_id', user!.id)
         .order('uploaded_at', { ascending: false })
-      if (data) {
-        setDocs(data.map((d: any) => ({
-          ...d,
-          app_number:    d.grant_applications?.app_number,
-          grant_program: d.grant_applications?.grant_program,
-        })))
+
+      if (docsErr) {
+        setError('Failed to load documents. Please try refreshing.')
+        setLoading(false)
+        return
       }
+
+      const rawDocs = (docsData ?? []) as AppDocument[]
+
+      // Fetch app numbers separately to avoid relying on FK relationship
+      const appIds = [...new Set(rawDocs.map(d => d.application_id).filter(Boolean))]
+      let appMap: Record<string, { app_number: string; grant_program: string }> = {}
+
+      if (appIds.length > 0) {
+        const { data: appsData } = await supabase
+          .from('grant_applications')
+          .select('id, app_number, grant_program')
+          .in('id', appIds)
+        if (appsData) {
+          appsData.forEach((a: any) => { appMap[a.id] = { app_number: a.app_number, grant_program: a.grant_program } })
+        }
+      }
+
+      setDocs(rawDocs.map(d => ({
+        ...d,
+        app_number:    appMap[d.application_id]?.app_number,
+        grant_program: appMap[d.application_id]?.grant_program,
+      })))
       setLoading(false)
     }
     load()
@@ -78,17 +103,12 @@ export default function DocumentCenterPage() {
   async function handleDownload(doc: DocWithApp) {
     setDownloading(doc.id)
     try {
-      const path = doc.file_url.includes('storage/v1') ? doc.file_url : null
-      if (path) {
-        const { data } = await supabase.storage.from('documents').download(doc.file_name)
-        if (data) {
-          const url = URL.createObjectURL(data)
-          const a = document.createElement('a'); a.href = url; a.download = doc.file_name; a.click()
-          URL.revokeObjectURL(url)
-        }
-      } else {
-        window.open(doc.file_url, '_blank')
-      }
+      const a = document.createElement('a')
+      a.href = doc.file_url
+      a.download = doc.file_name
+      a.target = '_blank'
+      a.rel = 'noreferrer'
+      a.click()
     } catch {
       window.open(doc.file_url, '_blank')
     }
@@ -169,6 +189,14 @@ export default function DocumentCenterPage() {
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 size={20} className="animate-spin" style={{ color: T.green }} />
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <p className="text-sm font-medium" style={{ color: '#DC2626' }}>{error}</p>
+            <button onClick={() => window.location.reload()}
+              className="text-sm font-semibold" style={{ color: T.green }}>
+              Refresh page
+            </button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
