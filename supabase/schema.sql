@@ -202,12 +202,15 @@ begin
 end;
 $$;
 
+drop trigger if exists profiles_updated_at on public.profiles;
 create trigger profiles_updated_at before update on public.profiles
   for each row execute function public.update_updated_at();
 
+drop trigger if exists applications_updated_at on public.grant_applications;
 create trigger applications_updated_at before update on public.grant_applications
   for each row execute function public.update_updated_at();
 
+drop trigger if exists notification_settings_updated_at on public.notification_settings;
 create trigger notification_settings_updated_at before update on public.notification_settings
   for each row execute function public.update_updated_at();
 
@@ -230,47 +233,64 @@ returns boolean language sql security definer as $$
 $$;
 
 -- PROFILES policies
+drop policy if exists "Users can view own profile" on public.profiles;
 create policy "Users can view own profile" on public.profiles for select using (id = auth.uid());
+drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile" on public.profiles for update using (id = auth.uid());
+drop policy if exists "Admins can view all profiles" on public.profiles;
 create policy "Admins can view all profiles" on public.profiles for select using (public.is_admin());
 
 -- APPLICATIONS policies
+drop policy if exists "Users can view own applications" on public.grant_applications;
 create policy "Users can view own applications" on public.grant_applications
   for select using (user_id = auth.uid());
+drop policy if exists "Users can insert own applications" on public.grant_applications;
 create policy "Users can insert own applications" on public.grant_applications
   for insert with check (user_id = auth.uid());
+drop policy if exists "Admins can view all applications" on public.grant_applications;
 create policy "Admins can view all applications" on public.grant_applications
   for all using (public.is_admin());
 
 -- MILESTONES policies
+drop policy if exists "Users can view milestones for own apps" on public.milestones;
 create policy "Users can view milestones for own apps" on public.milestones
   for select using (
     exists (select 1 from public.grant_applications where id = application_id and user_id = auth.uid())
   );
+drop policy if exists "Admins can manage milestones" on public.milestones;
 create policy "Admins can manage milestones" on public.milestones
   for all using (public.is_admin());
 
 -- PROOF OF PAYMENTS policies
+drop policy if exists "Users can view own receipts" on public.proof_of_payments;
 create policy "Users can view own receipts" on public.proof_of_payments
   for select using (user_id = auth.uid());
+drop policy if exists "Public can verify receipts by transaction_id" on public.proof_of_payments;
 create policy "Public can verify receipts by transaction_id" on public.proof_of_payments
   for select using (true);  -- Public verification — restrict in production if needed
+drop policy if exists "Admins can manage receipts" on public.proof_of_payments;
 create policy "Admins can manage receipts" on public.proof_of_payments
   for all using (public.is_admin());
 
 -- NOTIFICATIONS policies
+drop policy if exists "Users can view own notifications" on public.notifications;
 create policy "Users can view own notifications" on public.notifications
   for select using (user_id = auth.uid());
+drop policy if exists "Users can update own notifications" on public.notifications;
 create policy "Users can update own notifications" on public.notifications
   for update using (user_id = auth.uid());
+drop policy if exists "Users can delete own notifications" on public.notifications;
 create policy "Users can delete own notifications" on public.notifications
   for delete using (user_id = auth.uid());
+drop policy if exists "Admins can manage notifications" on public.notifications;
 create policy "Admins can manage notifications" on public.notifications
   for all using (public.is_admin());
+drop policy if exists "Service can insert notifications" on public.notifications;
 create policy "Service can insert notifications" on public.notifications
   for insert with check (true);  -- Allow inserts from app
 
 -- NOTIFICATION SETTINGS policies
+drop policy if exists "Users can manage own settings" on public.notification_settings;
 create policy "Users can manage own settings" on public.notification_settings
   for all using (user_id = auth.uid());
 
@@ -339,10 +359,13 @@ create table if not exists public.app_documents (
 
 alter table public.app_documents enable row level security;
 
+drop policy if exists "Users can view own documents" on public.app_documents;
 create policy "Users can view own documents" on public.app_documents
   for select using (user_id = auth.uid());
+drop policy if exists "Users can insert own documents" on public.app_documents;
 create policy "Users can insert own documents" on public.app_documents
   for insert with check (user_id = auth.uid());
+drop policy if exists "Admins can manage documents" on public.app_documents;
 create policy "Admins can manage documents" on public.app_documents
   for all using (public.is_admin());
 
@@ -363,16 +386,19 @@ create table if not exists public.messages (
 
 alter table public.messages enable row level security;
 
+drop policy if exists "Users can view messages for own apps" on public.messages;
 create policy "Users can view messages for own apps" on public.messages
   for select using (
     exists (select 1 from public.grant_applications where id = application_id and user_id = auth.uid())
     or public.is_admin()
   );
+drop policy if exists "Users can send messages for own apps" on public.messages;
 create policy "Users can send messages for own apps" on public.messages
   for insert with check (
     exists (select 1 from public.grant_applications where id = application_id and user_id = auth.uid())
     or public.is_admin()
   );
+drop policy if exists "Admins can manage messages" on public.messages;
 create policy "Admins can manage messages" on public.messages
   for all using (public.is_admin());
 
