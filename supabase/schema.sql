@@ -378,12 +378,237 @@ create policy "Admins can manage messages" on public.messages
 
 create index if not exists idx_messages_application_id on public.messages(application_id);
 
+-- =============================================
+-- SCHEMA ADDITIONS v3 — wallet, support, announcements
+-- These tables are queried by the app but were missing from v1/v2.
+-- This section is re-runnable (drop policy if exists before each create).
+-- =============================================
+
 -- ========================
--- STORAGE BUCKET
--- Run in Supabase dashboard → Storage → New Bucket:
---   Name: grant-documents, Private (not public)
--- Or run:
---   insert into storage.buckets (id, name, public) values ('grant-documents', 'grant-documents', false);
--- Storage policy (dashboard → Storage → grant-documents → Policies → New policy):
---   Allow authenticated uploads: bucket_id = 'grant-documents' AND auth.uid() IS NOT NULL
+-- APP_DOCUMENTS reconciliation
+-- Two pages write this table with different column names:
+--   ApplyOnlinePage.tsx        -> file_name, file_url
+--   ApplicationDetailPage.tsx  -> name, file_path, status
+-- Readers use both spellings. Support both, and keep the pairs mirrored
+-- so a row written by either page reads correctly from the other.
+-- ========================
+alter table public.app_documents
+  add column if not exists name text,
+  add column if not exists file_path text,
+  add column if not exists status text default 'uploaded'
+    check (status in ('uploaded', 'verified', 'rejected'));
+
+-- The original NOT NULLs block ApplicationDetailPage inserts, which never
+-- supply file_name/file_url. The mirror trigger below fills them in.
+alter table public.app_documents alter column file_name drop not null;
+alter table public.app_documents alter column file_url  drop not null;
+
+create or replace function public.sync_app_document_columns()
+returns trigger language plpgsql as $$
+begin
+  new.name      := coalesce(new.name,      new.file_name);
+  new.file_name := coalesce(new.file_name, new.name);
+  new.file_path := coalesce(new.file_path, new.file_url);
+  new.file_url  := coalesce(new.file_url,  new.file_path);
+  new.status    := coalesce(new.status, 'uploaded');
+  return new;
+end;
+$$;
+
+drop trigger if exists app_documents_sync on public.app_documents;
+create trigger app_documents_sync
+  before insert or update on public.app_documents
+  for each row execute function public.sync_app_document_columns();
+
+-- ========================
+-- WALLETS
+-- ========================
+create table if not exists public.wallets (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null unique,
+  balance numeric(12, 2) not null default 0,
+  total_received numeric(12, 2) not null default 0,
+  total_withdrawn numeric(12, 2) not null default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- ========================
+-- WALLET TRANSACTIONS
+-- ========================
+create table if not exists public.wallet_transactions (
+  id uuid default uuid_generate_v4() primary key,
+  wallet_id uuid references public.wallets(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  type text not null check (type in ('credit', 'withdrawal')),
+  amount numeric(12, 2) not null,
+  description text not null,
+  status text not null default 'pending'
+    check (status in ('completed', 'pending', 'approved', 'rejected')),
+
+  -- Withdrawal payout details
+  method text check (method in ('ach', 'debit_card')),
+  bank_name text,
+  routing_number text,
+  account_number_last4 char(4),
+  account_type text check (account_type in ('checking', 'savings')),
+  card_last4 char(4),
+  card_holder_name text,
+
+  application_id uuid references public.grant_applications(id) on delete set null,
+  admin_notes text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- ========================
+-- SUPPORT TICKETS
+-- ========================
+create table if not exists public.support_tickets (
+  id uuid default uuid_generate_v4() primary key,
+  ticket_number text not null unique,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  user_name text,
+  user_email text,
+  subject text not null,
+  category text not null,
+  message text not null,
+  status text not null default 'open'
+    check (status in ('open', 'in_progress', 'resolved', 'closed')),
+  admin_response text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- ========================
+-- ANNOUNCEMENTS (site-wide banner)
+-- ========================
+create table if not exists public.announcements (
+  id uuid default uuid_generate_v4() primary key,
+  message text not null,
+  type text not null default 'info' check (type in ('info', 'warning', 'success')),
+  active boolean not null default true,
+  expires_at timestamptz,
+  created_at timestamptz default now()
+);
+
+-- updated_at triggers for the new tables
+drop trigger if exists wallets_updated_at on public.wallets;
+create trigger wallets_updated_at before update on public.wallets
+  for each row execute function public.update_updated_at();
+
+drop trigger if exists wallet_transactions_updated_at on public.wallet_transactions;
+create trigger wallet_transactions_updated_at before update on public.wallet_transactions
+  for each row execute function public.update_updated_at();
+
+drop trigger if exists support_tickets_updated_at on public.support_tickets;
+create trigger support_tickets_updated_at before update on public.support_tickets
+  for each row execute function public.update_updated_at();
+
+-- ========================
+-- RLS for the new tables
+-- ========================
+alter table public.wallets enable row level security;
+alter table public.wallet_transactions enable row level security;
+alter table public.support_tickets enable row level security;
+alter table public.announcements enable row level security;
+
+-- WALLETS
+drop policy if exists "Users can view own wallet" on public.wallets;
+create policy "Users can view own wallet" on public.wallets
+  for select using (user_id = auth.uid());
+-- WalletPage.tsx debits the balance client-side when a withdrawal is requested
+drop policy if exists "Users can update own wallet" on public.wallets;
+create policy "Users can update own wallet" on public.wallets
+  for update using (user_id = auth.uid());
+drop policy if exists "Admins can manage wallets" on public.wallets;
+create policy "Admins can manage wallets" on public.wallets
+  for all using (public.is_admin());
+
+-- WALLET TRANSACTIONS
+drop policy if exists "Users can view own transactions" on public.wallet_transactions;
+create policy "Users can view own transactions" on public.wallet_transactions
+  for select using (user_id = auth.uid());
+drop policy if exists "Users can create own transactions" on public.wallet_transactions;
+create policy "Users can create own transactions" on public.wallet_transactions
+  for insert with check (user_id = auth.uid());
+drop policy if exists "Admins can manage transactions" on public.wallet_transactions;
+create policy "Admins can manage transactions" on public.wallet_transactions
+  for all using (public.is_admin());
+
+-- SUPPORT TICKETS
+drop policy if exists "Users can view own tickets" on public.support_tickets;
+create policy "Users can view own tickets" on public.support_tickets
+  for select using (user_id = auth.uid());
+drop policy if exists "Users can create own tickets" on public.support_tickets;
+create policy "Users can create own tickets" on public.support_tickets
+  for insert with check (user_id = auth.uid());
+drop policy if exists "Admins can manage tickets" on public.support_tickets;
+create policy "Admins can manage tickets" on public.support_tickets
+  for all using (public.is_admin());
+
+-- ANNOUNCEMENTS — readable by anyone (banner shows pre-login), admin-managed
+drop policy if exists "Anyone can read announcements" on public.announcements;
+create policy "Anyone can read announcements" on public.announcements
+  for select using (true);
+drop policy if exists "Admins can manage announcements" on public.announcements;
+create policy "Admins can manage announcements" on public.announcements
+  for all using (public.is_admin());
+
+-- Indexes
+create index if not exists idx_wallets_user_id on public.wallets(user_id);
+create index if not exists idx_wallet_txns_user_id on public.wallet_transactions(user_id);
+create index if not exists idx_wallet_txns_type_status on public.wallet_transactions(type, status);
+create index if not exists idx_support_tickets_user_id on public.support_tickets(user_id);
+create index if not exists idx_support_tickets_status on public.support_tickets(status);
+create index if not exists idx_announcements_active on public.announcements(active);
+
+-- ========================
+-- STORAGE BUCKET — grant-documents
+-- ========================
+insert into storage.buckets (id, name, public)
+values ('grant-documents', 'grant-documents', false)
+on conflict (id) do nothing;
+
+-- The app uploads under two different path conventions:
+--   ApplicationDetailPage.tsx -> <user_id>/<application_id>/<file>
+--   ApplyOnlinePage.tsx       -> <application_id>/<file>
+-- A user owns an object if the first folder is their uid, or is an
+-- application belonging to them. Admins can reach everything.
+create or replace function public.owns_storage_path(path text)
+returns boolean language sql security definer stable as $$
+  select
+    (storage.foldername(path))[1] = auth.uid()::text
+    or exists (
+      select 1 from public.grant_applications
+      where id::text = (storage.foldername(path))[1]
+        and user_id = auth.uid()
+    );
+$$;
+
+drop policy if exists "Users can upload own documents" on storage.objects;
+create policy "Users can upload own documents" on storage.objects
+  for insert with check (
+    bucket_id = 'grant-documents'
+    and auth.uid() is not null
+    and (public.owns_storage_path(name) or public.is_admin())
+  );
+
+drop policy if exists "Users can read own documents" on storage.objects;
+create policy "Users can read own documents" on storage.objects
+  for select using (
+    bucket_id = 'grant-documents'
+    and (public.owns_storage_path(name) or public.is_admin())
+  );
+
+drop policy if exists "Users can delete own documents" on storage.objects;
+create policy "Users can delete own documents" on storage.objects
+  for delete using (
+    bucket_id = 'grant-documents'
+    and (public.owns_storage_path(name) or public.is_admin())
+  );
+
+-- ========================
+-- MAKE YOURSELF ADMIN — run after creating your account:
+--   update public.profiles set role = 'admin' where email = 'your@email.com';
 -- ========================

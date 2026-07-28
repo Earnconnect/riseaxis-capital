@@ -7,12 +7,17 @@ interface Props {
 }
 
 export default function ProtectedRoute({ children, requireAdmin = false }: Props) {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, profileLoaded } = useAuth()
   const location = useLocation()
 
   // Show a slim top progress bar instead of a full-screen block —
-  // much less jarring, page feels faster
-  if (loading) {
+  // much less jarring, page feels faster.
+  // Also wait while an admin route's profile is still loading: profile
+  // arrives after the session (AuthContext unblocks the UI early), so
+  // without this an admin hard-loading /admin gets bounced to /dashboard
+  // because profile is momentarily null. profileLoaded settles even if the
+  // fetch fails, so this never hangs indefinitely.
+  if (loading || (requireAdmin && user && !profileLoaded)) {
     return (
       <div className="min-h-screen bg-page">
         <div className="fixed top-0 left-0 right-0 h-0.5 bg-navy-200 z-50">

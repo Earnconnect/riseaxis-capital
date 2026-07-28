@@ -8,6 +8,10 @@ interface AuthContextValue {
   session: Session | null
   profile: Profile | null
   loading: boolean
+  // true once a profile fetch has settled (resolved or failed) for the
+  // current user — lets route guards wait for the role without hanging
+  // forever if the fetch errors.
+  profileLoaded: boolean
   isAdmin: boolean
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>
@@ -24,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // loading = true only until we know whether a session exists.
   // Profile fetching is non-blocking — happens in the background.
   const [loading, setLoading] = useState(true)
+  const [profileLoaded, setProfileLoaded] = useState(false)
 
   async function fetchProfile(userId: string) {
     try {
@@ -35,6 +40,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data) setProfile(data as Profile)
     } catch {
       // silently ignore — profile table may not exist or be inaccessible
+    } finally {
+      // Mark the attempt as settled either way so guards don't wait forever
+      setProfileLoaded(true)
     }
   }
 
@@ -68,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           fetchProfile(session.user.id)
         } else {
           setProfile(null)
+          setProfileLoaded(false)
         }
         setLoading(false)
       }
@@ -102,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setSession(null)
     setProfile(null)
+    setProfileLoaded(false)
     setLoading(false)
     supabase.auth.signOut().catch(() => {})
   }
@@ -110,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, loading, isAdmin, signIn, signUp, signOut, refreshProfile }}
+      value={{ user, session, profile, loading, profileLoaded, isAdmin, signIn, signUp, signOut, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>
