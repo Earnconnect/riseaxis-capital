@@ -204,6 +204,7 @@ export default function ApplicationDetailPage() {
               {/* Amount + status */}
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
                 <div>
+                  <div className="text-white text-base sm:text-lg font-bold leading-tight mb-2">{app.full_name}</div>
                   <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-1">Amount Requested</div>
                   <div className="text-3xl sm:text-4xl font-black text-white leading-none">{formatCurrency(app.requested_amount)}</div>
                   <div className="font-mono text-white/40 text-xs mt-1">#{app.app_number}</div>
