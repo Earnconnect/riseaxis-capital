@@ -24,6 +24,7 @@ import TermsPage from '@/pages/public/TermsPage'
 import NotFoundPage from '@/pages/public/NotFoundPage'
 import VerifyReceiptPage from '@/pages/public/VerifyReceiptPage'
 import TrackApplicationPage from '@/pages/public/TrackApplicationPage'
+import PublicApplicationPage from '@/pages/public/PublicApplicationPage'
 import ImpactPage from '@/pages/public/ImpactPage'
 import NewsPage from '@/pages/public/NewsPage'
 import CareersPage from '@/pages/public/CareersPage'
@@ -90,6 +91,7 @@ export default function App() {
             <Route path="/verify" element={<VerifyReceiptPage />} />
             <Route path="/verify/:txId" element={<VerifyReceiptPage />} />
             <Route path="/track" element={<TrackApplicationPage />} />
+            <Route path="/view/:token" element={<PublicApplicationPage />} />
             <Route path="/impact" element={<ImpactPage />} />
             <Route path="/news" element={<NewsPage />} />
             <Route path="/careers" element={<CareersPage />} />

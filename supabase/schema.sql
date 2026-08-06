@@ -634,6 +634,60 @@ create policy "Users can delete own documents" on storage.objects
     and (public.owns_storage_path(name) or public.is_admin())
   );
 
+-- =============================================
+-- SCHEMA ADDITIONS v4 — public (no-login) application view
+-- Emails link to /view/<token>. A per-application secret token lets the
+-- applicant open a STATUS view without signing in. Sensitive fields
+-- (SSN, bank, ID, detailed financials) are never exposed here — a link
+-- can be forwarded, so only status-level data is returned.
+-- =============================================
+
+-- Secret, unguessable per-application token. Adding the column with a
+-- volatile default backfills a distinct token for every existing row.
+alter table public.grant_applications
+  add column if not exists public_token uuid not null default uuid_generate_v4();
+
+create unique index if not exists idx_applications_public_token
+  on public.grant_applications(public_token);
+
+-- SECURITY DEFINER so it can read past RLS, but it only ever returns the
+-- safe columns below, and only for an exact token match. Executable by
+-- anonymous visitors (the whole point is no login).
+create or replace function public.get_application_public(p_token uuid)
+returns table (
+  app_number text,
+  full_name text,
+  status text,
+  grant_program text,
+  requested_amount numeric,
+  approved_amount numeric,
+  purpose text,
+  created_at timestamptz,
+  reviewed_at timestamptz,
+  disbursement_stage text,
+  disbursement_initiated_at timestamptz,
+  disbursement_processing_at timestamptz,
+  disbursement_sent_at timestamptz,
+  disbursement_deposited_at timestamptz,
+  rejection_reason text
+)
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select
+    app_number, full_name, status, grant_program, requested_amount, approved_amount,
+    purpose, created_at, reviewed_at, disbursement_stage,
+    disbursement_initiated_at, disbursement_processing_at,
+    disbursement_sent_at, disbursement_deposited_at, rejection_reason
+  from public.grant_applications
+  where public_token = p_token
+$$;
+
+revoke all on function public.get_application_public(uuid) from public;
+grant execute on function public.get_application_public(uuid) to anon, authenticated;
+
 -- ========================
 -- MAKE YOURSELF ADMIN — run after creating your account:
 --   update public.profiles set role = 'admin' where email = 'your@email.com';
