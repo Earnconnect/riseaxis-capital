@@ -76,6 +76,18 @@ const EVENTS = {
     cta: 'View Your Application',
     next: 'A member of the RiseAxis Capital grants team has sent you a message regarding your application. Please review it and respond through your secure portal if a reply is requested.',
   },
+  withdrawal_approved: {
+    subject: 'Your Withdrawal Has Been Approved',
+    accent: '#16A34A', tag: 'Withdrawal Approved', icon: '&#128179;',
+    cta: 'View Your Wallet',
+    next: 'Your withdrawal request has been approved and is now being processed to your selected account. ACH transfers typically post within 2–3 business days. You can track the status anytime from your wallet.',
+  },
+  withdrawal_rejected: {
+    subject: 'Update On Your Withdrawal Request',
+    accent: '#DC2626', tag: 'Withdrawal Declined', icon: '&#128179;',
+    cta: 'View Your Wallet',
+    next: 'Your withdrawal request was not approved and the amount has been returned to your available wallet balance. You may submit a new withdrawal request, or contact support if you have questions.',
+  },
 }
 
 const PROGRAM_LABELS = {
@@ -294,10 +306,11 @@ export default async function handler(req, res) {
     if (appRow) app = appRow
   }
 
-  // CTA link: disbursed → wallet; otherwise the no-login status view when
-  // we have a token, falling back to the dashboard.
+  // CTA link: wallet-related events → wallet; otherwise the no-login
+  // status view when we have a token, falling back to the dashboard.
+  const walletEvents = ['disbursed', 'withdrawal_approved', 'withdrawal_rejected']
   let link
-  if (event === 'disbursed') link = `${APP_URL}/wallet`
+  if (walletEvents.includes(event)) link = `${APP_URL}/wallet`
   else if (app?.public_token) link = `${APP_URL}/view/${app.public_token}`
   else link = `${APP_URL}/dashboard`
 

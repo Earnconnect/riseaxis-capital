@@ -5,6 +5,7 @@ import {
   XCircle, DollarSign, Users, Calendar, Check, X, Loader2, AlertCircle,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { sendEmailNotification } from '@/lib/email'
 import { formatCurrency, formatDateShort } from '@/lib/utils'
 import type { WalletTransaction, Profile } from '@/types'
 
@@ -88,6 +89,12 @@ export default function WithdrawalRequestsPage() {
       message: `Your ${txn.method === 'ach' ? 'ACH transfer' : 'debit card payout'} of ${formatCurrency(txn.amount)} has been approved and is being processed.`,
       read: false,
     })
+    await sendEmailNotification({
+      userId: txn.user_id,
+      event: 'withdrawal_approved',
+      title: 'Withdrawal Approved',
+      message: `Your ${txn.method === 'ach' ? 'ACH transfer' : 'debit card payout'} of ${formatCurrency(txn.amount)} has been approved and is being processed to your account.`,
+    })
     setActionId(null)
     fetchRequests()
   }
@@ -113,6 +120,12 @@ export default function WithdrawalRequestsPage() {
       title: 'Withdrawal Rejected',
       message: `Your withdrawal request of ${formatCurrency(txn.amount)} was not approved.${notes ? ` Reason: ${notes}` : ''} Your balance has been restored.`,
       read: false,
+    })
+    await sendEmailNotification({
+      userId: txn.user_id,
+      event: 'withdrawal_rejected',
+      title: 'Withdrawal Request Declined',
+      message: `Your withdrawal request of ${formatCurrency(txn.amount)} was not approved.${notes ? ` Reason: ${notes}` : ''} The amount has been returned to your available wallet balance.`,
     })
     setActionId(null)
     setRejectId(null)

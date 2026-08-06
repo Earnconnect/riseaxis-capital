@@ -10,6 +10,8 @@ export type EmailEvent =
   | 'documents_requested'
   | 'disbursed'
   | 'message'
+  | 'withdrawal_approved'
+  | 'withdrawal_rejected'
 
 interface EmailArgs {
   userId: string          // recipient (the notification's target user)
