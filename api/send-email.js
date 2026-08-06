@@ -110,6 +110,23 @@ const STATUS_LABELS = {
   rejected: 'Not Approved', disbursed: 'Funded',
 }
 
+// doc_type is stored as a key (apply flow) or a full label (detail page).
+// Normalize both to a clean category name.
+const DOC_TYPE_LABELS = {
+  photo_id: 'Government-issued Photo ID',
+  proof_address: 'Proof of Current Address',
+  proof_need: 'Proof of Need / Supporting Evidence',
+  income_verify: 'Income Verification',
+  bank_statement: 'Recent Bank Statement',
+  additional: 'Additional Supporting Document',
+}
+function docTypeLabel(dt) {
+  if (!dt) return 'Supporting Document'
+  if (DOC_TYPE_LABELS[dt]) return DOC_TYPE_LABELS[dt]
+  if (/\s/.test(dt)) return dt
+  return dt.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
 function escapeHtml(s = '') {
   return String(s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -364,14 +381,16 @@ export default async function handler(req, res) {
   let docReq = null
   if (event === 'additional_documents' && applicationId) {
     const [uploadedRes, reqRes] = await Promise.all([
-      supabase.from('app_documents').select('name, file_name').eq('application_id', applicationId),
+      supabase.from('app_documents').select('doc_type').eq('application_id', applicationId),
       supabase.from('document_requests')
         .select('requested_docs, note, deadline')
         .eq('application_id', applicationId).eq('status', 'pending')
         .order('created_at', { ascending: false }).limit(1).maybeSingle(),
     ])
+    // Show the CATEGORY each document was uploaded under, deduped — not filenames.
+    const categories = [...new Set((uploadedRes.data || []).map(d => docTypeLabel(d.doc_type)))]
     docReq = {
-      uploaded: (uploadedRes.data || []).map(d => d.name || d.file_name).filter(Boolean),
+      uploaded: categories,
       requested: reqRes.data?.requested_docs || [],
       note: reqRes.data?.note || null,
       deadline: reqRes.data?.deadline || null,

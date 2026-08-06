@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
 import { sendEmailNotification } from '@/lib/email'
-import { formatCurrency, formatDate, formatDateShort, getGrantProgramLabel, getStatusLabel } from '@/lib/utils'
+import { formatCurrency, formatDate, formatDateShort, getGrantProgramLabel, getStatusLabel, getDocTypeLabel } from '@/lib/utils'
 import type { GrantApplication, Milestone } from '@/types'
 
 const T = {
@@ -59,7 +59,8 @@ export default function ReviewApplicationPage() {
   const [commSubject,    setCommSubject]    = useState('')
   const [commMessage,    setCommMessage]    = useState('')
   const [docReqItems,    setDocReqItems]    = useState('')   // one document per line
-  const [docReqDays,     setDocReqDays]     = useState('7')  // days until deadline
+  const [docReqDays,     setDocReqDays]     = useState('7')  // days until deadline (preset mode)
+  const [docReqCustom,   setDocReqCustom]   = useState('')   // exact datetime-local (overrides days)
   const [docReqNote,     setDocReqNote]     = useState('')
 
   useEffect(() => { fetchApp() }, [id])
@@ -264,8 +265,12 @@ export default function ReviewApplicationPage() {
     if (items.length === 0) return
     setSaving(true)
 
-    const days = Math.max(1, parseInt(docReqDays, 10) || 7)
-    const deadline = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()
+    // Custom exact date/time wins; otherwise fall back to the day preset.
+    const deadlineDate = docReqCustom
+      ? new Date(docReqCustom)
+      : new Date(Date.now() + Math.max(1, parseInt(docReqDays, 10) || 7) * 24 * 60 * 60 * 1000)
+    const deadline = deadlineDate.toISOString()
+    const dueStr = deadlineDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 
     // Supersede any earlier pending requests so only the latest is active
     await supabase.from('document_requests')
@@ -287,7 +292,7 @@ export default function ReviewApplicationPage() {
       user_id: app.user_id,
       type: 'documents_requested',
       title: 'Additional Documents Required',
-      message: `To finalize your grant disbursement, please upload: ${docList}. Due within ${days} day${days === 1 ? '' : 's'}.`,
+      message: `To finalize your grant disbursement, please upload: ${docList}. Due by ${dueStr}.`,
       application_id: app.id,
     })
 
@@ -303,6 +308,7 @@ export default function ReviewApplicationPage() {
     setDocReqItems('')
     setDocReqNote('')
     setDocReqDays('7')
+    setDocReqCustom('')
     setSaving(false)
     await fetchApp()
   }
@@ -823,15 +829,15 @@ export default function ReviewApplicationPage() {
             <DialogTitle>Request Additional Documents</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            {/* Already uploaded — for admin reference; also emailed to applicant */}
+            {/* Already uploaded — shown by CATEGORY (not filename); also emailed */}
             <div className="space-y-1.5">
               <Label>Already Uploaded</Label>
               {docs.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
-                  {docs.map(d => (
-                    <span key={d.id} className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg"
+                  {[...new Set(docs.map(d => getDocTypeLabel(d.doc_type)))].map(cat => (
+                    <span key={cat} className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg"
                       style={{ background: '#F0FDF4', color: '#15803D', border: '1px solid #BBF7D0' }}>
-                      <CheckCircle2 className="w-3 h-3" /> {d.name}
+                      <CheckCircle2 className="w-3 h-3" /> {cat}
                     </span>
                   ))}
                 </div>
@@ -865,27 +871,48 @@ export default function ReviewApplicationPage() {
             </div>
 
             {/* Deadline */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <Label>Deadline</Label>
               <div className="flex items-center gap-2 flex-wrap">
                 {['3', '7', '14', '30'].map(d => (
-                  <button key={d} type="button" onClick={() => setDocReqDays(d)}
+                  <button key={d} type="button" onClick={() => { setDocReqDays(d); setDocReqCustom('') }}
                     className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors"
-                    style={docReqDays === d
+                    style={!docReqCustom && docReqDays === d
                       ? { background: '#D97706', color: '#fff', border: '1px solid #D97706' }
                       : { background: '#F8FAFC', color: T.sub, border: `1px solid ${T.border}` }}>
                     {d} days
                   </button>
                 ))}
                 <div className="flex items-center gap-1.5 ml-1">
-                  <input type="number" min={1} value={docReqDays} onChange={e => setDocReqDays(e.target.value)}
+                  <input type="number" min={1} value={docReqDays}
+                    onChange={e => { setDocReqDays(e.target.value); setDocReqCustom('') }}
                     className="w-16 h-8 px-2 rounded-lg text-sm text-center outline-none"
                     style={{ background: '#F8FAFC', border: `1px solid ${T.border}`, color: T.heading }} />
-                  <span className="text-xs" style={{ color: T.muted }}>days to submit</span>
+                  <span className="text-xs" style={{ color: T.muted }}>days</span>
                 </div>
               </div>
+
+              {/* Custom exact date & time — overrides the presets above */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-medium" style={{ color: T.sub }}>Or set exact:</span>
+                <input type="datetime-local" value={docReqCustom}
+                  onChange={e => setDocReqCustom(e.target.value)}
+                  className="h-8 px-2 rounded-lg text-sm outline-none"
+                  style={{ background: '#F8FAFC', border: `1px solid ${docReqCustom ? '#D97706' : T.border}`, color: T.heading }} />
+                {docReqCustom && (
+                  <button type="button" onClick={() => setDocReqCustom('')}
+                    className="text-xs px-2 py-1 rounded-lg" style={{ color: T.muted, border: `1px solid ${T.border}` }}>
+                    Clear
+                  </button>
+                )}
+              </div>
+
               <p className="text-[11px]" style={{ color: T.muted }}>
-                Applicant sees a live countdown. Due {new Date(Date.now() + (Math.max(1, parseInt(docReqDays, 10) || 7)) * 86400000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.
+                Applicant sees a live countdown. Due{' '}
+                {(docReqCustom
+                  ? new Date(docReqCustom)
+                  : new Date(Date.now() + (Math.max(1, parseInt(docReqDays, 10) || 7)) * 86400000)
+                ).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}.
               </p>
             </div>
 

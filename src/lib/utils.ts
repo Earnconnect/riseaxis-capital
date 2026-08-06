@@ -69,6 +69,25 @@ export function getGrantProgramLabel(program: string): string {
   return labels[program] || program
 }
 
+// Documents are stored with doc_type as either a key (photo_id) from the
+// apply flow, or a full label string from the detail page. Normalize both
+// to a clean category name (e.g. "Government-issued Photo ID").
+export function getDocTypeLabel(docType: string): string {
+  if (!docType) return 'Supporting Document'
+  const labels: Record<string, string> = {
+    photo_id: 'Government-issued Photo ID',
+    proof_address: 'Proof of Current Address',
+    proof_need: 'Proof of Need / Supporting Evidence',
+    income_verify: 'Income Verification',
+    bank_statement: 'Recent Bank Statement',
+    additional: 'Additional Supporting Document',
+  }
+  if (labels[docType]) return labels[docType]
+  // Already a label (has spaces) — return as-is; otherwise prettify the key.
+  if (/\s/.test(docType)) return docType
+  return docType.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
 export function getGrantRange(program: string): string {
   const ranges: Record<string, string> = {
     emergency_assistance: '$5,000 – $10,000',
