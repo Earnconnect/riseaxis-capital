@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   Loader2, XCircle, CheckCircle2, Clock, Shield, ChevronRight,
-  FileText, Calendar, DollarSign, ArrowRight,
+  FileText, Calendar, DollarSign, ArrowRight, AlertTriangle,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
@@ -60,6 +60,9 @@ interface PublicApp {
   reviewed_at: string | null
   disbursement_stage: string | null
   rejection_reason: string | null
+  requested_docs: string[] | null
+  docs_note: string | null
+  docs_deadline: string | null
 }
 
 function fmtDate(iso: string | null) {
@@ -72,6 +75,12 @@ export default function PublicApplicationPage() {
   const [loading, setLoading] = useState(true)
   const [app, setApp] = useState<PublicApp | null>(null)
   const [error, setError] = useState(false)
+  const [nowTick, setNowTick] = useState(() => Date.now())
+
+  useEffect(() => {
+    const t = setInterval(() => setNowTick(Date.now()), 1000)
+    return () => clearInterval(t)
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -152,6 +161,75 @@ export default function PublicApplicationPage() {
               Official status for <span className="font-semibold" style={{ color: G.heading }}>{app.full_name}</span> — no login required.
             </p>
           </motion.div>
+
+          {/* Additional documents requested */}
+          {app.requested_docs && app.requested_docs.length > 0 && (() => {
+            const msLeft = app.docs_deadline ? new Date(app.docs_deadline).getTime() - nowTick : null
+            const overdue = msLeft != null && msLeft <= 0
+            const s = msLeft != null ? Math.max(0, Math.floor(msLeft / 1000)) : 0
+            const cd = { d: Math.floor(s / 86400), h: Math.floor((s % 86400) / 3600), m: Math.floor((s % 3600) / 60), s: s % 60 }
+            const A = overdue
+              ? { bg: '#FEF2F2', bd: '#FECACA', fg: '#DC2626', deep: '#991B1B' }
+              : { bg: '#FFFBEB', bd: '#FDE68A', fg: '#D97706', deep: '#92400E' }
+            return (
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl p-5 sm:p-6 mb-5" style={{ background: A.bg, border: `1px solid ${A.bd}` }}>
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: '#fff', border: `1px solid ${A.bd}` }}>
+                    <AlertTriangle className="w-5 h-5" style={{ color: A.fg }} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold" style={{ color: A.deep }}>Additional Documents Required</h3>
+                    <p className="text-sm mt-0.5" style={{ color: '#78350F' }}>
+                      Submit the documents below to finalize disbursement of your grant funds.
+                    </p>
+                  </div>
+                </div>
+
+                {app.docs_deadline && (
+                  <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{ background: '#fff', border: `1px solid ${A.bd}` }}>
+                    <Clock className="w-4 h-4 shrink-0" style={{ color: A.fg }} />
+                    {overdue ? (
+                      <span className="text-sm font-bold" style={{ color: A.fg }}>Deadline passed — please upload as soon as possible</span>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        {[{ v: cd.d, l: 'days' }, { v: cd.h, l: 'hrs' }, { v: cd.m, l: 'min' }, { v: cd.s, l: 'sec' }].map(u => (
+                          <div key={u.l} className="text-center">
+                            <div className="text-lg font-black tabular-nums leading-none" style={{ color: A.deep }}>{String(u.v).padStart(2, '0')}</div>
+                            <div className="text-[9px] font-bold uppercase tracking-wide" style={{ color: A.fg }}>{u.l}</div>
+                          </div>
+                        ))}
+                        <span className="text-xs ml-1" style={{ color: A.fg }}>remaining</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: A.fg }}>Documents Needed</div>
+                <div className="space-y-1.5 mb-4">
+                  {app.requested_docs.map((d, i) => (
+                    <div key={i} className="flex items-center gap-2 text-sm" style={{ color: A.deep }}>
+                      <FileText className="w-3.5 h-3.5 shrink-0" style={{ color: A.fg }} />
+                      <span className="font-semibold">{d}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {app.docs_note && (
+                  <p className="text-sm mb-4 p-3 rounded-xl" style={{ background: '#fff', border: `1px solid ${A.bd}`, color: '#78350F' }}>
+                    <span className="font-bold">Note: </span>{app.docs_note}
+                  </p>
+                )}
+
+                <Link to="/login"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+                  style={{ background: A.fg }}>
+                  Sign In to Upload <ArrowRight className="w-4 h-4" />
+                </Link>
+              </motion.div>
+            )
+          })()}
 
           {/* Main card */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}

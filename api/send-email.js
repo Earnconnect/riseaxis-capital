@@ -64,6 +64,12 @@ const EVENTS = {
     cta: 'Upload Your Document',
     next: 'To continue processing your application, we need an additional or corrected document. Please sign in to your secure portal and upload the requested file at your earliest convenience. Processing is paused until it is received.',
   },
+  additional_documents: {
+    subject: 'Action Required — Documents Needed to Finalize Your Grant',
+    accent: '#D97706', tag: 'Action Required', icon: '&#128206;',
+    cta: 'Upload Documents Now',
+    next: 'Your grant is approved and ready to be finalized. Once we receive and verify the documents listed above, your payment will be released to your account. Please upload them before the deadline to avoid delays.',
+  },
   disbursed: {
     subject: 'Your Grant Funds Have Been Disbursed',
     accent: '#16A34A', tag: 'Funds Disbursed', icon: '&#128176;',
@@ -132,7 +138,52 @@ function row(label, value, opts = {}) {
   </tr>`
 }
 
-function renderEmail({ event, title, message, name, link, app }) {
+// Documents block for an additional-documents request: what's already on
+// file, what's still needed, and the deadline with days remaining.
+function renderDocsBlock(docReq, accent) {
+  if (!docReq) return ''
+
+  const uploadedRows = docReq.uploaded.length
+    ? docReq.uploaded.map(d => `<tr><td style="padding:5px 0;color:${BODY};font-size:13.5px;"><span style="color:#16A34A;">&#10003;</span>&nbsp;&nbsp;${escapeHtml(d)}</td></tr>`).join('')
+    : `<tr><td style="padding:5px 0;color:${MUTED};font-size:13.5px;font-style:italic;">No documents were uploaded with your original application.</td></tr>`
+
+  const requestedRows = docReq.requested.length
+    ? docReq.requested.map(d => `<tr><td style="padding:7px 0;color:${INK};font-size:14.5px;font-weight:600;"><span style="color:${accent};">&#9744;</span>&nbsp;&nbsp;${escapeHtml(d)}</td></tr>`).join('')
+    : ''
+
+  let deadlineBox = ''
+  if (docReq.deadline) {
+    const due = new Date(docReq.deadline)
+    const days = Math.ceil((due.getTime() - Date.now()) / 86400000)
+    const dueStr = due.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+    const remain = days > 0 ? `${days} day${days === 1 ? '' : 's'} remaining` : 'Due now'
+    deadlineBox = `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;">
+        <tr><td style="padding:14px 16px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#B45309;">&#9201; Submission Deadline</div>
+          <div style="font-size:16px;font-weight:800;color:#92400E;margin-top:4px;">${escapeHtml(dueStr)}</div>
+          <div style="font-size:13px;color:#B45309;margin-top:2px;">${remain} to upload your documents</div>
+        </td></tr>
+      </table>`
+  }
+
+  const noteBox = docReq.note
+    ? `<p style="margin:12px 0 0;color:${BODY};font-size:13.5px;line-height:1.6;"><strong>Note from our team:</strong> ${escapeHtml(docReq.note)}</p>`
+    : ''
+
+  return `
+    <tr><td style="padding:8px 40px 4px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${MUTED};margin:0 0 6px;">Documents Already On File</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};">${uploadedRows}</table>
+
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${accent};margin:18px 0 6px;">Documents Still Needed</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:2px solid ${accent};">${requestedRows}</table>
+      ${deadlineBox}
+      ${noteBox}
+    </td></tr>`
+}
+
+function renderEmail({ event, title, message, name, link, app, docReq }) {
   const e = EVENTS[event]
   const safeTitle = escapeHtml(title || e.tag)
   const safeMsg = escapeHtml(message || '').replace(/\n/g, '<br>')
@@ -195,6 +246,8 @@ function renderEmail({ event, title, message, name, link, app }) {
           <p style="margin:0 0 14px;color:${BODY};font-size:15px;line-height:1.65;">${greeting}</p>
           <p style="margin:0;color:${BODY};font-size:15px;line-height:1.65;">${safeMsg}</p>
         </td></tr>
+
+        ${renderDocsBlock(docReq, e.accent)}
 
         <!-- CTA -->
         <tr><td style="padding:26px 40px 22px;">
@@ -306,6 +359,25 @@ export default async function handler(req, res) {
     if (appRow) app = appRow
   }
 
+  // For a document request, gather what was uploaded initially + what is
+  // now needed + the admin-set deadline, so the email can list both.
+  let docReq = null
+  if (event === 'additional_documents' && applicationId) {
+    const [uploadedRes, reqRes] = await Promise.all([
+      supabase.from('app_documents').select('name, file_name').eq('application_id', applicationId),
+      supabase.from('document_requests')
+        .select('requested_docs, note, deadline')
+        .eq('application_id', applicationId).eq('status', 'pending')
+        .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    ])
+    docReq = {
+      uploaded: (uploadedRes.data || []).map(d => d.name || d.file_name).filter(Boolean),
+      requested: reqRes.data?.requested_docs || [],
+      note: reqRes.data?.note || null,
+      deadline: reqRes.data?.deadline || null,
+    }
+  }
+
   // CTA link: wallet-related events → wallet; otherwise the no-login
   // status view when we have a token, falling back to the dashboard.
   const walletEvents = ['disbursed', 'withdrawal_approved', 'withdrawal_rejected']
@@ -314,7 +386,7 @@ export default async function handler(req, res) {
   else if (app?.public_token) link = `${APP_URL}/view/${app.public_token}`
   else link = `${APP_URL}/dashboard`
 
-  const html = renderEmail({ event, title, message, name: profile.full_name, link, app })
+  const html = renderEmail({ event, title, message, name: profile.full_name, link, app, docReq })
 
   const resp = await fetch('https://api.resend.com/emails', {
     method: 'POST',

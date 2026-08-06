@@ -688,6 +688,86 @@ $$;
 revoke all on function public.get_application_public(uuid) from public;
 grant execute on function public.get_application_public(uuid) to anon, authenticated;
 
+-- =============================================
+-- SCHEMA ADDITIONS v5 — admin requests for additional documents
+-- Admin can ask an applicant for more/updated documents to finalize
+-- disbursement, with an admin-set deadline. The applicant is notified
+-- in-app and by email, and can see a live countdown.
+-- =============================================
+
+create table if not exists public.document_requests (
+  id uuid default uuid_generate_v4() primary key,
+  application_id uuid references public.grant_applications(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  requested_docs text[] not null,          -- names of the documents needed
+  note text,                               -- optional instructions from admin
+  deadline timestamptz,                    -- admin-set due date/time
+  status text not null default 'pending'
+    check (status in ('pending', 'fulfilled', 'expired')),
+  created_at timestamptz default now()
+);
+
+alter table public.document_requests enable row level security;
+
+drop policy if exists "Users can view own document requests" on public.document_requests;
+create policy "Users can view own document requests" on public.document_requests
+  for select using (user_id = auth.uid());
+drop policy if exists "Admins can manage document requests" on public.document_requests;
+create policy "Admins can manage document requests" on public.document_requests
+  for all using (public.is_admin());
+
+create index if not exists idx_document_requests_application_id on public.document_requests(application_id);
+create index if not exists idx_document_requests_status on public.document_requests(status);
+
+-- Extend the public (no-login) view to surface the newest pending
+-- document request + its deadline. Return type changes, so drop first.
+drop function if exists public.get_application_public(uuid);
+create or replace function public.get_application_public(p_token uuid)
+returns table (
+  app_number text,
+  full_name text,
+  status text,
+  grant_program text,
+  requested_amount numeric,
+  approved_amount numeric,
+  purpose text,
+  created_at timestamptz,
+  reviewed_at timestamptz,
+  disbursement_stage text,
+  disbursement_initiated_at timestamptz,
+  disbursement_processing_at timestamptz,
+  disbursement_sent_at timestamptz,
+  disbursement_deposited_at timestamptz,
+  rejection_reason text,
+  requested_docs text[],
+  docs_note text,
+  docs_deadline timestamptz
+)
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select
+    ga.app_number, ga.full_name, ga.status, ga.grant_program, ga.requested_amount, ga.approved_amount,
+    ga.purpose, ga.created_at, ga.reviewed_at, ga.disbursement_stage,
+    ga.disbursement_initiated_at, ga.disbursement_processing_at,
+    ga.disbursement_sent_at, ga.disbursement_deposited_at, ga.rejection_reason,
+    dr.requested_docs, dr.note, dr.deadline
+  from public.grant_applications ga
+  left join lateral (
+    select requested_docs, note, deadline
+    from public.document_requests
+    where application_id = ga.id and status = 'pending'
+    order by created_at desc
+    limit 1
+  ) dr on true
+  where ga.public_token = p_token
+$$;
+
+revoke all on function public.get_application_public(uuid) from public;
+grant execute on function public.get_application_public(uuid) to anon, authenticated;
+
 -- ========================
 -- MAKE YOURSELF ADMIN — run after creating your account:
 --   update public.profiles set role = 'admin' where email = 'your@email.com';

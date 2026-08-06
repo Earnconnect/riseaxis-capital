@@ -37,6 +37,16 @@ interface AppDocument {
   uploaded_at: string
 }
 
+interface DocRequest {
+  id: string
+  application_id: string
+  requested_docs: string[]
+  note: string | null
+  deadline: string | null
+  status: string
+  created_at: string
+}
+
 type Tab = 'overview' | 'documents' | 'messages' | 'milestones' | 'disbursement' | 'bank'
 
 /* ── Theme ───────────────────────────────────────── */
@@ -106,6 +116,7 @@ export default function ApplicationDetailPage() {
   const [milestones, setMilestones] = useState<Milestone[]>([])
   const [docs, setDocs]             = useState<AppDocument[]>([])
   const [messages, setMessages]     = useState<AppMessage[]>([])
+  const [docRequest, setDocRequest] = useState<DocRequest | null>(null)
   const [loading, setLoading]       = useState(true)
   const [tab, setTab]               = useState<Tab>((searchParams.get('tab') as Tab) || 'overview')
 
@@ -113,17 +124,19 @@ export default function ApplicationDetailPage() {
 
   async function load() {
     setLoading(true)
-    const [appRes, msRes, docsRes, msgRes] = await Promise.all([
+    const [appRes, msRes, docsRes, msgRes, reqRes] = await Promise.all([
       supabase.from('grant_applications').select('*').eq('id', id!).eq('user_id', user!.id).single(),
       supabase.from('milestones').select('*').eq('application_id', id!).order('created_at'),
       supabase.from('app_documents').select('*').eq('application_id', id!).order('uploaded_at', { ascending: false }),
       supabase.from('messages').select('*').eq('application_id', id!).order('created_at'),
+      supabase.from('document_requests').select('*').eq('application_id', id!).eq('status', 'pending').order('created_at', { ascending: false }).limit(1).maybeSingle(),
     ])
     if (appRes.data) setApp(appRes.data as GrantApplication)
     else { navigate('/applications'); return }
     if (msRes.data) setMilestones(msRes.data as Milestone[])
     if (docsRes.data) setDocs(docsRes.data as AppDocument[])
     if (msgRes.data) setMilestones(prev => { setMessages(msgRes.data as AppMessage[]); return prev })
+    setDocRequest((reqRes.data as DocRequest) || null)
     setLoading(false)
   }
 
@@ -297,6 +310,15 @@ export default function ApplicationDetailPage() {
           </div>
         </div>
       </motion.div>
+
+      {/* ── Additional Documents Requested ── */}
+      {docRequest && (
+        <DocRequestBanner
+          request={docRequest}
+          uploadedCount={docs.length}
+          onUpload={() => setTab('documents')}
+        />
+      )}
 
       {/* Tabs */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }}>
@@ -1340,6 +1362,110 @@ function BankTab({ app, setApp }: { app: GrantApplication; setApp: React.Dispatc
         ))}
       </div>
     </div>
+  )
+}
+
+/* ── Additional Documents Requested banner (with live countdown) ── */
+function DocRequestBanner({ request, uploadedCount, onUpload }: {
+  request: DocRequest
+  uploadedCount: number
+  onUpload: () => void
+}) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(t)
+  }, [])
+
+  const deadline = request.deadline ? new Date(request.deadline).getTime() : null
+  const msLeft = deadline ? deadline - now : null
+  const overdue = msLeft != null && msLeft <= 0
+
+  function parts(ms: number) {
+    const s = Math.max(0, Math.floor(ms / 1000))
+    return {
+      d: Math.floor(s / 86400),
+      h: Math.floor((s % 86400) / 3600),
+      m: Math.floor((s % 3600) / 60),
+      s: s % 60,
+    }
+  }
+  const p = msLeft != null ? parts(msLeft) : null
+
+  const A = overdue
+    ? { bg: '#FEF2F2', bd: '#FECACA', fg: '#DC2626', deep: '#991B1B' }
+    : { bg: '#FFFBEB', bd: '#FDE68A', fg: '#D97706', deep: '#92400E' }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl overflow-hidden"
+      style={{ background: A.bg, border: `1px solid ${A.bd}` }}>
+      <div className="p-5 sm:p-6">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: '#fff', border: `1px solid ${A.bd}` }}>
+            <AlertTriangle className="w-5 h-5" style={{ color: A.fg }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-bold" style={{ color: A.deep }}>
+              Additional Documents Required
+            </h3>
+            <p className="text-sm mt-0.5" style={{ color: '#78350F' }}>
+              Submit the documents below to finalize disbursement of your grant funds to your account.
+            </p>
+          </div>
+        </div>
+
+        {/* Countdown */}
+        {p && (
+          <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{ background: '#fff', border: `1px solid ${A.bd}` }}>
+            <Clock className="w-4 h-4 shrink-0" style={{ color: A.fg }} />
+            {overdue ? (
+              <span className="text-sm font-bold" style={{ color: A.fg }}>Deadline passed — please upload as soon as possible</span>
+            ) : (
+              <div className="flex items-center gap-2">
+                {[{ v: p.d, l: 'days' }, { v: p.h, l: 'hrs' }, { v: p.m, l: 'min' }, { v: p.s, l: 'sec' }].map(u => (
+                  <div key={u.l} className="text-center">
+                    <div className="text-lg font-black tabular-nums leading-none" style={{ color: A.deep }}>{String(u.v).padStart(2, '0')}</div>
+                    <div className="text-[9px] font-bold uppercase tracking-wide" style={{ color: A.fg }}>{u.l}</div>
+                  </div>
+                ))}
+                <span className="text-xs ml-1" style={{ color: A.fg }}>remaining</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Requested list */}
+        <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: A.fg }}>Documents Needed</div>
+        <div className="space-y-1.5 mb-4">
+          {request.requested_docs.map((d, i) => (
+            <div key={i} className="flex items-center gap-2 text-sm" style={{ color: A.deep }}>
+              <FileText className="w-3.5 h-3.5 shrink-0" style={{ color: A.fg }} />
+              <span className="font-semibold">{d}</span>
+            </div>
+          ))}
+        </div>
+
+        {request.note && (
+          <p className="text-sm mb-4 p-3 rounded-xl" style={{ background: '#fff', border: `1px solid ${A.bd}`, color: '#78350F' }}>
+            <span className="font-bold">Note: </span>{request.note}
+          </p>
+        )}
+
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <span className="text-xs" style={{ color: A.fg }}>
+            {uploadedCount} document{uploadedCount === 1 ? '' : 's'} currently on file
+            {request.deadline && ` · Due ${new Date(request.deadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}
+          </span>
+          <button onClick={onUpload}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all"
+            style={{ background: A.fg }}>
+            <Upload className="w-4 h-4" /> Upload Documents
+          </button>
+        </div>
+      </div>
+    </motion.div>
   )
 }
 

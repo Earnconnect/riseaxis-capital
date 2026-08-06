@@ -50,6 +50,7 @@ export default function ReviewApplicationPage() {
   const [rejectOpen,    setRejectOpen]    = useState(false)
   const [milestoneOpen, setMilestoneOpen] = useState(false)
   const [commOpen,      setCommOpen]      = useState(false)
+  const [docReqOpen,    setDocReqOpen]    = useState(false)
 
   const [approveAmount,  setApproveAmount]  = useState('')
   const [rejectReason,   setRejectReason]   = useState('')
@@ -57,6 +58,9 @@ export default function ReviewApplicationPage() {
   const [newMilestone,   setNewMilestone]   = useState({ title: '', description: '' })
   const [commSubject,    setCommSubject]    = useState('')
   const [commMessage,    setCommMessage]    = useState('')
+  const [docReqItems,    setDocReqItems]    = useState('')   // one document per line
+  const [docReqDays,     setDocReqDays]     = useState('7')  // days until deadline
+  const [docReqNote,     setDocReqNote]     = useState('')
 
   useEffect(() => { fetchApp() }, [id])
 
@@ -254,6 +258,55 @@ export default function ReviewApplicationPage() {
     setSaving(false)
   }
 
+  async function requestDocuments() {
+    if (!app) return
+    const items = docReqItems.split('\n').map(s => s.trim()).filter(Boolean)
+    if (items.length === 0) return
+    setSaving(true)
+
+    const days = Math.max(1, parseInt(docReqDays, 10) || 7)
+    const deadline = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()
+
+    // Supersede any earlier pending requests so only the latest is active
+    await supabase.from('document_requests')
+      .update({ status: 'expired' })
+      .eq('application_id', app.id)
+      .eq('status', 'pending')
+
+    await supabase.from('document_requests').insert({
+      application_id: app.id,
+      user_id: app.user_id,
+      requested_docs: items,
+      note: docReqNote || null,
+      deadline,
+      status: 'pending',
+    })
+
+    const docList = items.join(', ')
+    await supabase.from('notifications').insert({
+      user_id: app.user_id,
+      type: 'documents_requested',
+      title: 'Additional Documents Required',
+      message: `To finalize your grant disbursement, please upload: ${docList}. Due within ${days} day${days === 1 ? '' : 's'}.`,
+      application_id: app.id,
+    })
+
+    await sendEmailNotification({
+      userId: app.user_id,
+      event: 'additional_documents',
+      title: 'Additional Documents Required to Finalize Your Grant',
+      message: `To finalize the disbursement of your approved grant funds, our team needs a few additional documents. Please sign in and upload the items listed below before the deadline so we can release your payment without delay.`,
+      applicationId: app.id,
+    })
+
+    setDocReqOpen(false)
+    setDocReqItems('')
+    setDocReqNote('')
+    setDocReqDays('7')
+    setSaving(false)
+    await fetchApp()
+  }
+
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto px-5 lg:px-8 py-8 space-y-5">
@@ -322,6 +375,11 @@ export default function ReviewApplicationPage() {
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-slate-100"
             style={{ color: T.sub, border: `1px solid ${T.border}` }}>
             <Bell className="w-3.5 h-3.5" /> Message
+          </button>
+          <button onClick={() => setDocReqOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+            style={{ background: '#FFFBEB', color: '#D97706', border: '1px solid #FDE68A' }}>
+            <FileText className="w-3.5 h-3.5" /> Request Documents
           </button>
           {app.status === 'pending' && (
             <button onClick={() => updateStatus('under_review')} disabled={saving}
@@ -753,6 +811,98 @@ export default function ReviewApplicationPage() {
             <Button onClick={sendCommunication} disabled={!commMessage || saving}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               Send
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Request Additional Documents Dialog ───────────────── */}
+      <Dialog open={docReqOpen} onOpenChange={setDocReqOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Request Additional Documents</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {/* Already uploaded — for admin reference; also emailed to applicant */}
+            <div className="space-y-1.5">
+              <Label>Already Uploaded</Label>
+              {docs.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {docs.map(d => (
+                    <span key={d.id} className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg"
+                      style={{ background: '#F0FDF4', color: '#15803D', border: '1px solid #BBF7D0' }}>
+                      <CheckCircle2 className="w-3 h-3" /> {d.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs" style={{ color: T.muted }}>No documents uploaded yet.</p>
+              )}
+            </div>
+
+            {/* Quick add */}
+            <div className="space-y-1.5">
+              <Label>Common Documents</Label>
+              <div className="flex flex-wrap gap-2">
+                {['Government-issued ID', 'Proof of Address', 'Bank Statement', 'Voided Check', 'Proof of Income', 'Tax Return (most recent)'].map(t => (
+                  <button key={t} type="button"
+                    onClick={() => setDocReqItems(prev => prev.split('\n').map(s => s.trim()).filter(Boolean).includes(t) ? prev : (prev.trim() ? prev.trim() + '\n' : '') + t)}
+                    className="text-xs px-2.5 py-1 rounded-lg font-medium transition-colors hover:bg-slate-100"
+                    style={{ background: '#F8FAFC', color: T.sub, border: `1px solid ${T.border}` }}>
+                    + {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Requested docs */}
+            <div className="space-y-1.5">
+              <Label>Documents Needed * <span className="font-normal" style={{ color: T.muted }}>(one per line)</span></Label>
+              <textarea rows={4} value={docReqItems} onChange={e => setDocReqItems(e.target.value)}
+                placeholder={'Government-issued ID\nBank Statement (last 30 days)'}
+                className="w-full text-sm rounded-xl p-3 resize-none outline-none"
+                style={{ background: '#F8FAFC', border: `1px solid ${T.border}`, color: T.heading }} />
+            </div>
+
+            {/* Deadline */}
+            <div className="space-y-1.5">
+              <Label>Deadline</Label>
+              <div className="flex items-center gap-2 flex-wrap">
+                {['3', '7', '14', '30'].map(d => (
+                  <button key={d} type="button" onClick={() => setDocReqDays(d)}
+                    className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors"
+                    style={docReqDays === d
+                      ? { background: '#D97706', color: '#fff', border: '1px solid #D97706' }
+                      : { background: '#F8FAFC', color: T.sub, border: `1px solid ${T.border}` }}>
+                    {d} days
+                  </button>
+                ))}
+                <div className="flex items-center gap-1.5 ml-1">
+                  <input type="number" min={1} value={docReqDays} onChange={e => setDocReqDays(e.target.value)}
+                    className="w-16 h-8 px-2 rounded-lg text-sm text-center outline-none"
+                    style={{ background: '#F8FAFC', border: `1px solid ${T.border}`, color: T.heading }} />
+                  <span className="text-xs" style={{ color: T.muted }}>days to submit</span>
+                </div>
+              </div>
+              <p className="text-[11px]" style={{ color: T.muted }}>
+                Applicant sees a live countdown. Due {new Date(Date.now() + (Math.max(1, parseInt(docReqDays, 10) || 7)) * 86400000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.
+              </p>
+            </div>
+
+            {/* Note */}
+            <div className="space-y-1.5">
+              <Label>Note to Applicant <span className="font-normal" style={{ color: T.muted }}>(optional)</span></Label>
+              <textarea rows={2} value={docReqNote} onChange={e => setDocReqNote(e.target.value)}
+                placeholder="Any specific instructions…"
+                className="w-full text-sm rounded-xl p-3 resize-none outline-none"
+                style={{ background: '#F8FAFC', border: `1px solid ${T.border}`, color: T.heading }} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDocReqOpen(false)}>Cancel</Button>
+            <Button onClick={requestDocuments} disabled={!docReqItems.trim() || saving}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+              Send Request
             </Button>
           </DialogFooter>
         </DialogContent>
