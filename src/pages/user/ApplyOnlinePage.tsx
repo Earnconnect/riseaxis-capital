@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { sendEmailNotification } from '@/lib/email'
 import { generateAppNumber } from '@/lib/utils'
 
 const DRAFT_KEY = 'riseaxis_application_draft_v2'
@@ -379,6 +380,13 @@ export default function ApplyOnlinePage() {
       type: 'general',
       title: 'Application Received',
       message: `Your application ${num} has been received and is under initial review. Reference: ${num}`,
+    })
+    await sendEmailNotification({
+      userId: user.id,
+      event: 'submitted',
+      title: 'Application Received',
+      message: `Your application ${num} has been received and is under initial review. We'll email you as it progresses. Reference: ${num}`,
+      applicationId: appId,
     })
 
     localStorage.removeItem(DRAFT_KEY)

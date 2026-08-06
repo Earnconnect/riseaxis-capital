@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
+import { sendEmailNotification } from '@/lib/email'
 import { formatCurrency, formatDate, formatDateShort, getGrantProgramLabel, getStatusLabel } from '@/lib/utils'
 import type { GrantApplication, Milestone } from '@/types'
 
@@ -90,6 +91,15 @@ export default function ReviewApplicationPage() {
         : `Your document "${doc.name}" was not accepted for application ${app.app_number}. Please re-upload.`,
       application_id: app.id,
     })
+    if (status === 'rejected') {
+      await sendEmailNotification({
+        userId: app.user_id,
+        event: 'documents_requested',
+        title: 'Document Required',
+        message: `Your document "${doc.name}" was not accepted for application ${app.app_number}. Please sign in and re-upload it so we can continue processing your grant.`,
+        applicationId: app.id,
+      })
+    }
     setDocSaving(null)
   }
 
@@ -117,6 +127,15 @@ export default function ReviewApplicationPage() {
           type: status === 'approved' ? 'approval' : status === 'rejected' ? 'rejection' : 'under_review',
           ...messages[status],
           application_id: app.id,
+        })
+        const emailEvent =
+          status === 'approved' ? 'approved' :
+          status === 'rejected' ? 'rejected' : 'under_review'
+        await sendEmailNotification({
+          userId: app.user_id,
+          event: emailEvent,
+          ...messages[status],
+          applicationId: app.id,
         })
       }
       await fetchApp()
@@ -175,6 +194,13 @@ export default function ReviewApplicationPage() {
         message: `${formatCurrency(app.approved_amount || 0)} has been credited to your RiseAxis wallet. Application: ${app.app_number}`,
         application_id: app.id,
       })
+      await sendEmailNotification({
+        userId: app.user_id,
+        event: 'disbursed',
+        title: 'Funds Disbursed to Your Wallet',
+        message: `${formatCurrency(app.approved_amount || 0)} has been credited to your RiseAxis wallet for application ${app.app_number}. Sign in to your wallet to request a withdrawal.`,
+        applicationId: app.id,
+      })
     }
     await fetchApp()
     setSaving(false)
@@ -214,6 +240,13 @@ export default function ReviewApplicationPage() {
       title: commSubject || 'Message from RiseAxis Capital',
       message: commMessage,
       application_id: app.id,
+    })
+    await sendEmailNotification({
+      userId: app.user_id,
+      event: 'message',
+      title: commSubject || 'Message from RiseAxis Capital',
+      message: commMessage,
+      applicationId: app.id,
     })
     setCommOpen(false)
     setCommSubject('')
