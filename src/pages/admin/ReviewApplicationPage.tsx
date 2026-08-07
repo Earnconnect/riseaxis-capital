@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
-import { sendEmailNotification } from '@/lib/email'
+import { sendEmailNotification, type EmailEvent } from '@/lib/email'
 import { formatCurrency, formatDate, formatDateShort, getGrantProgramLabel, getStatusLabel, getDocTypeLabel } from '@/lib/utils'
 import type { GrantApplication, Milestone } from '@/types'
 
@@ -217,20 +217,56 @@ export default function ReviewApplicationPage() {
       status: stage === 'deposited' ? 'disbursed' : 'approved',
       [stageField]: new Date().toISOString(),
     }).eq('id', app.id)
+
+    const amt = formatCurrency(app.approved_amount || 0)
+    // Notification + email content for each disbursement step.
+    const steps: Record<string, { event: EmailEvent; title: string; message: string }> = {
+      initiated: {
+        event: 'disbursement_initiated',
+        title: 'Disbursement Initiated',
+        message: `Good news — the disbursement of your approved grant of ${amt} has been initiated for application ${app.app_number}. It now moves into processing, and we'll email you at each step.`,
+      },
+      processing: {
+        event: 'disbursement_processing',
+        title: 'Disbursement Processing',
+        message: `Your grant funds of ${amt} are now being processed. You can expect the next update within one business day as your payment moves to your bank.`,
+      },
+      sent_to_bank: {
+        event: 'disbursement_sent',
+        title: 'Funds Sent to Your Bank',
+        message: `Your grant funds of ${amt} have been released to your bank. Deposits typically post to your account by the next business day.`,
+      },
+    }
+
     if (stage === 'deposited') {
       await creditWallet(app.user_id, app.approved_amount || 0, app.id, app.app_number)
       await supabase.from('notifications').insert({
         user_id: app.user_id,
         type: 'disbursement',
         title: 'Funds Deposited to Your Wallet',
-        message: `${formatCurrency(app.approved_amount || 0)} has been credited to your RiseAxis wallet. Application: ${app.app_number}`,
+        message: `${amt} has been credited to your RiseAxis wallet. Application: ${app.app_number}`,
         application_id: app.id,
       })
       await sendEmailNotification({
         userId: app.user_id,
         event: 'disbursed',
         title: 'Funds Disbursed to Your Wallet',
-        message: `${formatCurrency(app.approved_amount || 0)} has been credited to your RiseAxis wallet for application ${app.app_number}. Sign in to your wallet to request a withdrawal.`,
+        message: `${amt} has been credited to your RiseAxis wallet for application ${app.app_number}. Sign in to your wallet to request a withdrawal.`,
+        applicationId: app.id,
+      })
+    } else if (steps[stage]) {
+      await supabase.from('notifications').insert({
+        user_id: app.user_id,
+        type: 'disbursement',
+        title: steps[stage].title,
+        message: steps[stage].message,
+        application_id: app.id,
+      })
+      await sendEmailNotification({
+        userId: app.user_id,
+        event: steps[stage].event,
+        title: steps[stage].title,
+        message: steps[stage].message,
         applicationId: app.id,
       })
     }

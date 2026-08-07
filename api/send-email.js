@@ -76,6 +76,24 @@ const EVENTS = {
     cta: 'View Your Application',
     next: 'All requested documents have been received and verified. No further action is needed from you. Your grant is now proceeding to final disbursement, and you will be notified when funds are released.',
   },
+  disbursement_initiated: {
+    subject: 'Your Grant Disbursement Has Been Initiated',
+    accent: '#2563EB', tag: 'Disbursement Initiated', icon: '&#128640;',
+    cta: 'Track Your Disbursement',
+    next: 'Your disbursement is now in progress. It will move through processing and transfer to your bank over the next few business days. We will email you at every step so you always know where your funds are.',
+  },
+  disbursement_processing: {
+    subject: 'Your Grant Funds Are Being Processed',
+    accent: '#2563EB', tag: 'Processing', icon: '&#9203;',
+    cta: 'Track Your Disbursement',
+    next: 'Your payment is being processed now. You can expect the next update within one business day as your funds are released to your bank.',
+  },
+  disbursement_sent: {
+    subject: 'Your Grant Funds Have Been Sent to Your Bank',
+    accent: '#16A34A', tag: 'Sent to Bank', icon: '&#127974;',
+    cta: 'Track Your Disbursement',
+    next: 'Your funds have been released to your bank and are on the way. Deposits typically post to your account by the next business day. We will confirm once the funds have landed.',
+  },
   disbursed: {
     subject: 'Your Grant Funds Have Been Disbursed',
     accent: '#16A34A', tag: 'Funds Disbursed', icon: '&#128176;',
