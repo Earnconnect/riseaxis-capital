@@ -9,6 +9,7 @@ export type EmailEvent =
   | 'rejected'
   | 'documents_requested'
   | 'additional_documents'
+  | 'documents_confirmed'
   | 'disbursed'
   | 'message'
   | 'withdrawal_approved'

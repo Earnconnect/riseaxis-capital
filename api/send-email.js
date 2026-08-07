@@ -70,6 +70,12 @@ const EVENTS = {
     cta: 'Upload Documents Now',
     next: 'Your grant is approved and ready to be finalized. Once we receive and verify the documents listed above, your payment will be released to your account. Please upload them before the deadline to avoid delays.',
   },
+  documents_confirmed: {
+    subject: 'Your Documents Have Been Confirmed',
+    accent: '#16A34A', tag: 'Documents Confirmed', icon: '&#9989;',
+    cta: 'View Your Application',
+    next: 'All requested documents have been received and verified. No further action is needed from you. Your grant is now proceeding to final disbursement, and you will be notified when funds are released.',
+  },
   disbursed: {
     subject: 'Your Grant Funds Have Been Disbursed',
     accent: '#16A34A', tag: 'Funds Disbursed', icon: '&#128176;',

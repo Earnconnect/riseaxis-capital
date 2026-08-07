@@ -38,6 +38,7 @@ export default function ReviewApplicationPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   interface AppDoc { id: string; name: string; doc_type: string; file_path: string; file_size: number; status: 'uploaded'|'verified'|'rejected'; uploaded_at: string }
+  interface PendingDocRequest { id: string; requested_docs: string[]; note: string | null; deadline: string | null; created_at: string }
 
   const [app, setApp]           = useState<GrantApplication | null>(null)
   const [milestones, setMilestones] = useState<Milestone[]>([])
@@ -62,15 +63,17 @@ export default function ReviewApplicationPage() {
   const [docReqDays,     setDocReqDays]     = useState('7')  // days until deadline (preset mode)
   const [docReqCustom,   setDocReqCustom]   = useState('')   // exact datetime-local (overrides days)
   const [docReqNote,     setDocReqNote]     = useState('')
+  const [docRequest,     setDocRequest]     = useState<PendingDocRequest | null>(null)
 
   useEffect(() => { fetchApp() }, [id])
 
   async function fetchApp() {
     if (!id) return
-    const [appRes, msRes, docsRes] = await Promise.all([
+    const [appRes, msRes, docsRes, reqRes] = await Promise.all([
       supabase.from('grant_applications').select('*').eq('id', id).single(),
       supabase.from('milestones').select('*').eq('application_id', id).order('created_at'),
       supabase.from('app_documents').select('*').eq('application_id', id).order('uploaded_at', { ascending: false }),
+      supabase.from('document_requests').select('*').eq('application_id', id).eq('status', 'pending').order('created_at', { ascending: false }).limit(1).maybeSingle(),
     ])
     if (appRes.data) {
       setApp(appRes.data as GrantApplication)
@@ -79,7 +82,30 @@ export default function ReviewApplicationPage() {
     }
     if (msRes.data) setMilestones(msRes.data as Milestone[])
     if (docsRes.data) setDocs(docsRes.data as AppDoc[])
+    setDocRequest((reqRes.data as PendingDocRequest) || null)
     setLoading(false)
+  }
+
+  async function completeDocRequest() {
+    if (!app || !docRequest) return
+    setSaving(true)
+    await supabase.from('document_requests').update({ status: 'fulfilled' }).eq('id', docRequest.id)
+    await supabase.from('notifications').insert({
+      user_id: app.user_id,
+      type: 'documents_requested',
+      title: 'Documents Confirmed',
+      message: `We've received and confirmed the documents for application ${app.app_number}. No further documents are needed — your grant is proceeding to finalization.`,
+      application_id: app.id,
+    })
+    await sendEmailNotification({
+      userId: app.user_id,
+      event: 'documents_confirmed',
+      title: 'Your Documents Have Been Confirmed',
+      message: `Thank you — we have received and confirmed all the documents we requested for your grant. No further action is needed on your part. Your grant is now proceeding to final disbursement.`,
+      applicationId: app.id,
+    })
+    setSaving(false)
+    await fetchApp()
   }
 
   async function reviewDoc(doc: AppDoc, status: 'verified' | 'rejected') {
@@ -510,6 +536,39 @@ export default function ReviewApplicationPage() {
                 </p>
               )}
             </Section>
+          )}
+
+          {/* Pending document request — admin can mark complete */}
+          {docRequest && (
+            <div className="rounded-2xl p-5" style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <AlertTriangle className="w-4 h-4" style={{ color: '#D97706' }} />
+                    <h3 className="text-sm font-bold" style={{ color: '#92400E' }}>Documents Requested — Awaiting Applicant</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {docRequest.requested_docs.map((d, i) => (
+                      <span key={i} className="text-[11px] px-2 py-1 rounded-lg font-semibold"
+                        style={{ background: '#fff', color: '#92400E', border: '1px solid #FDE68A' }}>{d}</span>
+                    ))}
+                  </div>
+                  {docRequest.deadline && (
+                    <p className="text-[11px]" style={{ color: '#B45309' }}>
+                      Due {new Date(docRequest.deadline).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                    </p>
+                  )}
+                </div>
+                <Button onClick={completeDocRequest} disabled={saving}
+                  style={{ background: 'linear-gradient(135deg, #16A34A, #15803D)' }}>
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  Mark Complete
+                </Button>
+              </div>
+              <p className="text-[11px] mt-2" style={{ color: '#B45309' }}>
+                Verify each uploaded document below, then Mark Complete to clear the applicant's deadline and confirm no further documents are needed.
+              </p>
+            </div>
           )}
 
           {/* Documents Review */}
