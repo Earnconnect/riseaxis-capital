@@ -63,6 +63,7 @@ export default function ReviewApplicationPage() {
   const [docReqDays,     setDocReqDays]     = useState('7')  // days until deadline (preset mode)
   const [docReqCustom,   setDocReqCustom]   = useState('')   // exact datetime-local (overrides days)
   const [docReqNote,     setDocReqNote]     = useState('')
+  const [docReqError,    setDocReqError]    = useState('')
   const [docRequest,     setDocRequest]     = useState<PendingDocRequest | null>(null)
 
   useEffect(() => { fetchApp() }, [id])
@@ -289,6 +290,7 @@ export default function ReviewApplicationPage() {
     if (!app) return
     const items = docReqItems.split('\n').map(s => s.trim()).filter(Boolean)
     if (items.length === 0) return
+    setDocReqError('')
     setSaving(true)
 
     // Custom exact date/time wins; otherwise fall back to the day preset.
@@ -304,7 +306,7 @@ export default function ReviewApplicationPage() {
       .eq('application_id', app.id)
       .eq('status', 'pending')
 
-    await supabase.from('document_requests').insert({
+    const { error: reqErr } = await supabase.from('document_requests').insert({
       application_id: app.id,
       user_id: app.user_id,
       requested_docs: items,
@@ -312,6 +314,14 @@ export default function ReviewApplicationPage() {
       deadline,
       status: 'pending',
     })
+
+    // Surface failures instead of closing silently (e.g. the
+    // document_requests table / v5 schema was never run in Supabase).
+    if (reqErr) {
+      setDocReqError(`Could not save the request: ${reqErr.message}`)
+      setSaving(false)
+      return
+    }
 
     const docList = items.join(', ')
     await supabase.from('notifications').insert({
@@ -984,6 +994,11 @@ export default function ReviewApplicationPage() {
                 style={{ background: '#F8FAFC', border: `1px solid ${T.border}`, color: T.heading }} />
             </div>
           </div>
+          {docReqError && (
+            <div className="mx-1 mb-1 px-3 py-2 rounded-lg text-xs" style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}>
+              {docReqError}
+            </div>
+          )}
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDocReqOpen(false)}>Cancel</Button>
             <Button onClick={requestDocuments} disabled={!docReqItems.trim() || saving}>
