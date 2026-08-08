@@ -119,9 +119,9 @@ export default function LiveChatPage() {
     setSending(true)
     setInput('')
 
-    // Is the applicant actively chatting? (a user message in the last 3 min)
+    // Is the applicant actively chatting? (a user message in the last 5 min)
     const lastUserMsg = thread.filter(m => m.sender_role === 'user').slice(-1)[0]
-    const userActive = lastUserMsg && (Date.now() - new Date(lastUserMsg.created_at).getTime() < 3 * 60 * 1000)
+    const userActive = lastUserMsg && (Date.now() - new Date(lastUserMsg.created_at).getTime() < 5 * 60 * 1000)
 
     const { error } = await supabase.from('chat_messages').insert({
       user_id: selected,
@@ -138,8 +138,8 @@ export default function LiveChatPage() {
       title: 'New reply from RiseAxis Support',
       message: text.length > 140 ? text.slice(0, 140) + '…' : text,
     })
-    // Only email when they're not actively in the chat, to avoid spamming
-    // during a live back-and-forth.
+    // Only email when they're not actively in the chat (no message from
+    // them in the last 5 minutes), to avoid spamming a live back-and-forth.
     if (!userActive) {
       await sendEmailNotification({
         userId: selected,
