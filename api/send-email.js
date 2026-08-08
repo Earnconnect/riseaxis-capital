@@ -94,6 +94,12 @@ const EVENTS = {
     cta: 'Track Your Disbursement',
     next: 'Your funds have been released to your bank and are on the way. Deposits typically post to your account by the next business day. We will confirm once the funds have landed.',
   },
+  disbursement_split: {
+    subject: 'Your Grant Will Be Deposited in Installments',
+    accent: '#2563EB', tag: 'Deposit Schedule', icon: '&#128197;',
+    cta: 'Track Your Disbursement',
+    next: 'To stay within your bank\'s deposit limits, your grant will be released in several smaller deposits on the schedule shown above. Each installment will be confirmed by email as it is sent. No action is required from you.',
+  },
   disbursed: {
     subject: 'Your Grant Funds Have Been Disbursed',
     accent: '#16A34A', tag: 'Funds Disbursed', icon: '&#128176;',

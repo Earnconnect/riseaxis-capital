@@ -39,6 +39,7 @@ export default function ReviewApplicationPage() {
   const navigate = useNavigate()
   interface AppDoc { id: string; name: string; doc_type: string; file_path: string; file_size: number; status: 'uploaded'|'verified'|'rejected'; uploaded_at: string }
   interface PendingDocRequest { id: string; requested_docs: string[]; note: string | null; deadline: string | null; created_at: string }
+  interface Installment { id: string; installment_number: number; total_installments: number; amount: number; status: 'scheduled' | 'deposited'; scheduled_for: string | null; deposited_at: string | null }
 
   const [app, setApp]           = useState<GrantApplication | null>(null)
   const [milestones, setMilestones] = useState<Milestone[]>([])
@@ -65,16 +66,22 @@ export default function ReviewApplicationPage() {
   const [docReqNote,     setDocReqNote]     = useState('')
   const [docReqError,    setDocReqError]    = useState('')
   const [docRequest,     setDocRequest]     = useState<PendingDocRequest | null>(null)
+  const [installments,   setInstallments]   = useState<Installment[]>([])
+  const [splitMode,      setSplitMode]      = useState<'count' | 'cap'>('count')
+  const [splitCount,     setSplitCount]     = useState('3')
+  const [splitCap,       setSplitCap]       = useState('')
+  const [splitInterval,  setSplitInterval]  = useState('7')
 
   useEffect(() => { fetchApp() }, [id])
 
   async function fetchApp() {
     if (!id) return
-    const [appRes, msRes, docsRes, reqRes] = await Promise.all([
+    const [appRes, msRes, docsRes, reqRes, instRes] = await Promise.all([
       supabase.from('grant_applications').select('*').eq('id', id).single(),
       supabase.from('milestones').select('*').eq('application_id', id).order('created_at'),
       supabase.from('app_documents').select('*').eq('application_id', id).order('uploaded_at', { ascending: false }),
       supabase.from('document_requests').select('*').eq('application_id', id).eq('status', 'pending').order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('disbursement_installments').select('*').eq('application_id', id).order('installment_number'),
     ])
     if (appRes.data) {
       setApp(appRes.data as GrantApplication)
@@ -84,7 +91,100 @@ export default function ReviewApplicationPage() {
     if (msRes.data) setMilestones(msRes.data as Milestone[])
     if (docsRes.data) setDocs(docsRes.data as AppDoc[])
     setDocRequest((reqRes.data as PendingDocRequest) || null)
+    setInstallments((instRes.data as Installment[]) || [])
     setLoading(false)
+  }
+
+  // Split the approved amount into N deposits (by count or a max-per-deposit
+  // cap) to stay within a bank's deposit limit. Truthful — no fee.
+  async function createSplit() {
+    if (!app || !app.approved_amount) return
+    const total = Number(app.approved_amount)
+    let n: number
+    if (splitMode === 'count') {
+      n = Math.max(2, parseInt(splitCount, 10) || 2)
+    } else {
+      const cap = parseFloat(splitCap) || total
+      n = Math.max(1, Math.ceil(total / cap))
+    }
+    setSaving(true)
+    const interval = Math.max(0, parseInt(splitInterval, 10) || 0)
+    const per = Math.floor((total / n) * 100) / 100
+    const rows: Record<string, unknown>[] = []
+    let remaining = total
+    for (let i = 0; i < n; i++) {
+      const amount = i === n - 1 ? Math.round(remaining * 100) / 100 : per
+      remaining = Math.round((remaining - amount) * 100) / 100
+      const d = new Date(Date.now() + i * interval * 86400000)
+      rows.push({
+        application_id: app.id,
+        user_id: app.user_id,
+        installment_number: i + 1,
+        total_installments: n,
+        amount,
+        status: 'scheduled',
+        scheduled_for: d.toISOString().slice(0, 10),
+      })
+    }
+    // Replace any existing plan
+    await supabase.from('disbursement_installments').delete().eq('application_id', app.id)
+    const { error } = await supabase.from('disbursement_installments').insert(rows)
+    if (error) { setSaving(false); return }
+
+    const scheduleLines = rows.map(r =>
+      `Installment ${r.installment_number} of ${n} — ${formatCurrency(r.amount as number)} on ${new Date(r.scheduled_for as string).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+    ).join('\n')
+
+    await supabase.from('notifications').insert({
+      user_id: app.user_id,
+      type: 'disbursement',
+      title: 'Deposit Schedule Set',
+      message: `Your grant of ${formatCurrency(total)} will be deposited in ${n} installments of about ${formatCurrency(per)} to stay within your bank's deposit limits.`,
+      application_id: app.id,
+    })
+    await sendEmailNotification({
+      userId: app.user_id,
+      event: 'disbursement_split',
+      title: 'Your Grant Will Be Deposited in Installments',
+      message: `Your approved grant of ${formatCurrency(total)} will be released in ${n} deposits of about ${formatCurrency(per)} each, to stay within your bank's deposit limits.\n\nSchedule:\n${scheduleLines}`,
+      applicationId: app.id,
+    })
+    setSaving(false)
+    await fetchApp()
+  }
+
+  async function depositInstallment(inst: Installment) {
+    if (!app) return
+    setSaving(true)
+    await supabase.from('disbursement_installments')
+      .update({ status: 'deposited', deposited_at: new Date().toISOString() })
+      .eq('id', inst.id)
+    await creditWallet(app.user_id, inst.amount, app.id, app.app_number)
+
+    const remainingAfter = installments.filter(x => x.status === 'scheduled' && x.id !== inst.id).length
+    await supabase.from('notifications').insert({
+      user_id: app.user_id,
+      type: 'disbursement',
+      title: `Installment ${inst.installment_number} of ${inst.total_installments} Deposited`,
+      message: `${formatCurrency(inst.amount)} (installment ${inst.installment_number} of ${inst.total_installments}) has been credited to your RiseAxis wallet for application ${app.app_number}.${remainingAfter > 0 ? ` ${remainingAfter} deposit${remainingAfter === 1 ? '' : 's'} remaining.` : ' This was your final installment.'}`,
+      application_id: app.id,
+    })
+    await sendEmailNotification({
+      userId: app.user_id,
+      event: 'disbursed',
+      title: `Installment ${inst.installment_number} of ${inst.total_installments} Deposited`,
+      message: `${formatCurrency(inst.amount)} — installment ${inst.installment_number} of ${inst.total_installments} — has been credited to your RiseAxis wallet for application ${app.app_number}.${remainingAfter > 0 ? ` ${remainingAfter} deposit${remainingAfter === 1 ? '' : 's'} remaining on your schedule.` : ' This completes your grant disbursement.'}`,
+      applicationId: app.id,
+    })
+
+    // When every installment is deposited, mark the application disbursed.
+    if (remainingAfter === 0) {
+      await supabase.from('grant_applications')
+        .update({ status: 'disbursed', disbursement_stage: 'deposited', disbursement_deposited_at: new Date().toISOString() })
+        .eq('id', app.id)
+    }
+    setSaving(false)
+    await fetchApp()
   }
 
   async function completeDocRequest() {
@@ -788,6 +888,87 @@ export default function ReviewApplicationPage() {
                     </div>
                   )
                 })}
+              </div>
+
+              {/* Split deposit into installments (bank deposit-limit safe) */}
+              <div className="mt-5 pt-4" style={{ borderTop: `1px solid ${T.border}` }}>
+                <h4 className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: T.sub }}>Split Deposit</h4>
+                <p className="text-[11px] mb-3" style={{ color: T.muted }}>
+                  Release the grant in several smaller deposits to stay within the recipient's bank deposit limit.
+                </p>
+
+                {installments.length === 0 ? (
+                  <div className="space-y-2.5">
+                    <div className="flex gap-1.5">
+                      <button onClick={() => setSplitMode('count')} className="flex-1 text-[11px] py-1.5 rounded-lg font-semibold"
+                        style={splitMode === 'count' ? { background: T.greenLt, color: T.green, border: `1px solid ${T.greenBd}` } : { background: '#F8FAFC', color: T.sub, border: `1px solid ${T.border}` }}>
+                        By number
+                      </button>
+                      <button onClick={() => setSplitMode('cap')} className="flex-1 text-[11px] py-1.5 rounded-lg font-semibold"
+                        style={splitMode === 'cap' ? { background: T.greenLt, color: T.green, border: `1px solid ${T.greenBd}` } : { background: '#F8FAFC', color: T.sub, border: `1px solid ${T.border}` }}>
+                        By max / deposit
+                      </button>
+                    </div>
+                    {splitMode === 'count' ? (
+                      <div className="flex items-center gap-2">
+                        <input type="number" min={2} value={splitCount} onChange={e => setSplitCount(e.target.value)}
+                          className="w-16 h-8 px-2 rounded-lg text-sm text-center outline-none" style={{ background: '#F8FAFC', border: `1px solid ${T.border}`, color: T.heading }} />
+                        <span className="text-[11px]" style={{ color: T.muted }}>installments</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm" style={{ color: T.muted }}>$</span>
+                        <input type="number" min={1} value={splitCap} onChange={e => setSplitCap(e.target.value)} placeholder="5000"
+                          className="w-24 h-8 px-2 rounded-lg text-sm outline-none" style={{ background: '#F8FAFC', border: `1px solid ${T.border}`, color: T.heading }} />
+                        <span className="text-[11px]" style={{ color: T.muted }}>max per deposit</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px]" style={{ color: T.muted }}>Every</span>
+                      <input type="number" min={0} value={splitInterval} onChange={e => setSplitInterval(e.target.value)}
+                        className="w-14 h-8 px-2 rounded-lg text-sm text-center outline-none" style={{ background: '#F8FAFC', border: `1px solid ${T.border}`, color: T.heading }} />
+                      <span className="text-[11px]" style={{ color: T.muted }}>days apart</span>
+                    </div>
+                    {app.approved_amount ? (
+                      <p className="text-[11px]" style={{ color: T.muted }}>
+                        {(() => {
+                          const total = Number(app.approved_amount)
+                          const n = splitMode === 'count' ? Math.max(2, parseInt(splitCount, 10) || 2) : Math.max(1, Math.ceil(total / (parseFloat(splitCap) || total)))
+                          return `${n} deposits of about ${formatCurrency(Math.floor((total / n) * 100) / 100)} each.`
+                        })()}
+                      </p>
+                    ) : <p className="text-[11px]" style={{ color: '#DC2626' }}>Set an approved amount first.</p>}
+                    <Button onClick={createSplit} disabled={saving || !app.approved_amount} className="w-full">
+                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />} Create Split & Notify
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {installments.map(inst => (
+                      <div key={inst.id} className="flex items-center gap-2 p-2.5 rounded-xl" style={{ background: '#F8FAFC', border: `1px solid ${T.border}` }}>
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
+                          style={inst.status === 'deposited' ? { background: 'linear-gradient(135deg,#16A34A,#15803D)', color: '#fff' } : { background: '#F1F5F9', color: T.muted }}>
+                          {inst.status === 'deposited' ? <CheckCircle2 className="w-3.5 h-3.5" /> : inst.installment_number}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-bold" style={{ color: T.heading }}>{formatCurrency(inst.amount)}</div>
+                          <div className="text-[10px]" style={{ color: T.muted }}>
+                            {inst.installment_number} of {inst.total_installments}{inst.scheduled_for ? ` · ${new Date(inst.scheduled_for).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
+                          </div>
+                        </div>
+                        {inst.status === 'scheduled' ? (
+                          <button onClick={() => depositInstallment(inst)} disabled={saving}
+                            className="text-[11px] px-2.5 h-7 rounded-lg font-semibold" style={{ background: T.greenLt, color: T.green, border: `1px solid ${T.greenBd}` }}>
+                            {saving ? '…' : 'Deposit'}
+                          </button>
+                        ) : (
+                          <span className="text-[10px] font-bold" style={{ color: T.green }}>Deposited</span>
+                        )}
+                      </div>
+                    ))}
+                    <p className="text-[10px]" style={{ color: T.muted }}>Deposit installments here instead of the single-step tracker above, to avoid double-crediting.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}

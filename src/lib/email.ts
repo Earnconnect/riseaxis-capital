@@ -13,6 +13,7 @@ export type EmailEvent =
   | 'disbursement_initiated'
   | 'disbursement_processing'
   | 'disbursement_sent'
+  | 'disbursement_split'
   | 'disbursed'
   | 'message'
   | 'withdrawal_approved'

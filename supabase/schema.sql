@@ -768,6 +768,37 @@ $$;
 revoke all on function public.get_application_public(uuid) from public;
 grant execute on function public.get_application_public(uuid) to anon, authenticated;
 
+-- =============================================
+-- SCHEMA ADDITIONS v6 — split disbursement (installments)
+-- A large grant can be released in several smaller deposits to stay
+-- within a receiving bank's per-deposit limit. Each installment is its
+-- own row; the applicant is told the schedule up front.
+-- =============================================
+
+create table if not exists public.disbursement_installments (
+  id uuid default uuid_generate_v4() primary key,
+  application_id uuid references public.grant_applications(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  installment_number int not null,
+  total_installments int not null,
+  amount numeric(12, 2) not null,
+  status text not null default 'scheduled' check (status in ('scheduled', 'deposited')),
+  scheduled_for date,
+  deposited_at timestamptz,
+  created_at timestamptz default now()
+);
+
+alter table public.disbursement_installments enable row level security;
+
+drop policy if exists "Users can view own installments" on public.disbursement_installments;
+create policy "Users can view own installments" on public.disbursement_installments
+  for select using (user_id = auth.uid());
+drop policy if exists "Admins can manage installments" on public.disbursement_installments;
+create policy "Admins can manage installments" on public.disbursement_installments
+  for all using (public.is_admin());
+
+create index if not exists idx_installments_application_id on public.disbursement_installments(application_id);
+
 -- ========================
 -- MAKE YOURSELF ADMIN — run after creating your account:
 --   update public.profiles set role = 'admin' where email = 'your@email.com';
