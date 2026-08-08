@@ -64,29 +64,20 @@ export default function WalletPage() {
   const [formError, setFormError]   = useState('')
   const [submitted, setSubmitted]   = useState(false)
   const [refNum, setRefNum]         = useState('')
-  const [feeFlat, setFeeFlat]       = useState(0)
-  const [feePercent, setFeePercent] = useState(0)
   const [procStep, setProcStep]     = useState(0)   // processing-simulation step
 
   useEffect(() => { if (user) fetchWallet() }, [user])
 
   async function fetchWallet() {
     setLoading(true)
-    const [{ data: w }, { data: t }, { data: s }] = await Promise.all([
+    const [{ data: w }, { data: t }] = await Promise.all([
       supabase.from('wallets').select('*').eq('user_id', user!.id).maybeSingle(),
       supabase.from('wallet_transactions').select('*').eq('user_id', user!.id).order('created_at', { ascending: false }),
-      supabase.from('platform_settings').select('ach_fee_flat, ach_fee_percent').eq('id', 1).maybeSingle(),
     ])
     setWallet(w as WalletType | null)
     setTxns((t as WalletTransaction[]) || [])
-    if (s) { setFeeFlat(Number(s.ach_fee_flat) || 0); setFeePercent(Number(s.ach_fee_percent) || 0) }
     setLoading(false)
   }
-
-  // ACH fee is DEDUCTED from the payout — the user receives amount minus fee.
-  const withdrawAmt = parseFloat(amount) || 0
-  const achFee = withdrawAmt > 0 ? Math.min(withdrawAmt, feeFlat + withdrawAmt * (feePercent / 100)) : 0
-  const netPayout = Math.max(0, withdrawAmt - achFee)
 
   const balance  = wallet?.balance ?? 0
   const pending  = txns.filter(t => t.type === 'withdrawal' && t.status === 'pending').reduce((s, t) => s + t.amount, 0)
@@ -183,7 +174,6 @@ export default function WalletPage() {
       }
     }
 
-    const fee = achFee
     const newBalance = balance - amt
     const [{ error: wErr }] = await Promise.all([
       supabase.from('wallets')
@@ -198,7 +188,6 @@ export default function WalletPage() {
       user_id: user!.id,
       type: 'withdrawal',
       amount: amt,
-      fee,
       description: method === 'ach' ? `ACH transfer to ${bankName}` : `Debit card payout (••••${cardNum})`,
       status: 'pending',
       method,
@@ -217,7 +206,7 @@ export default function WalletPage() {
       user_id: user!.id,
       type: 'general',
       title: 'Withdrawal Request Submitted',
-      message: `Your ${method === 'ach' ? 'ACH bank transfer' : 'debit card payout'} request for ${formatCurrency(amt)} is under review.${fee > 0 ? ` A ${formatCurrency(fee)} ACH fee applies; you will receive ${formatCurrency(amt - fee)}.` : ''}`,
+      message: `Your ${method === 'ach' ? 'ACH bank transfer' : 'debit card payout'} request for ${formatCurrency(amt)} is under review.`,
       read: false,
     })
 
@@ -796,30 +785,6 @@ export default function WalletPage() {
                         })}
                       </div>
                     </div>
-
-                    {/* Fee breakdown — ACH fee is deducted from the payout */}
-                    {withdrawAmt > 0 && (
-                      <div className="rounded-xl p-3.5" style={{ background: '#F8FAFC', border: `1px solid ${T.border}` }}>
-                        <div className="flex items-center justify-between text-sm mb-1.5">
-                          <span style={{ color: T.sub }}>Withdrawal amount</span>
-                          <span className="font-semibold" style={{ color: T.heading }}>{formatCurrency(withdrawAmt)}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm mb-1.5">
-                          <span className="flex items-center gap-1" style={{ color: T.sub }}>
-                            ACH transfer fee
-                            {feePercent > 0 && <span className="text-[10px]" style={{ color: T.muted }}>({feePercent}%{feeFlat > 0 ? ` + ${formatCurrency(feeFlat)}` : ''})</span>}
-                          </span>
-                          <span className="font-semibold" style={{ color: '#D97706' }}>−{formatCurrency(achFee)}</span>
-                        </div>
-                        <div className="flex items-center justify-between pt-2 mt-1 border-t" style={{ borderColor: T.border }}>
-                          <span className="text-sm font-bold" style={{ color: T.heading }}>You'll receive</span>
-                          <span className="text-base font-black" style={{ color: T.green }}>{formatCurrency(netPayout)}</span>
-                        </div>
-                        <p className="text-[10px] mt-2" style={{ color: T.muted }}>
-                          The transfer fee is deducted from your payout. You are not charged separately.
-                        </p>
-                      </div>
-                    )}
 
                     {/* Step 3 — Bank / Card details */}
                     <div>

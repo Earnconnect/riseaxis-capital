@@ -41,27 +41,8 @@ export default function WithdrawalRequestsPage() {
   const [rejectId, setRejectId] = useState<string | null>(null)
   const [notes, setNotes]       = useState('')
   const [actionErr, setActionErr] = useState('')
-  const [feeFlat, setFeeFlat]     = useState('0')
-  const [feePercent, setFeePercent] = useState('0')
-  const [savingFee, setSavingFee] = useState(false)
-  const [feeSaved, setFeeSaved]   = useState(false)
 
-  useEffect(() => { fetchRequests(); fetchSettings() }, [])
-
-  async function fetchSettings() {
-    const { data } = await supabase.from('platform_settings').select('ach_fee_flat, ach_fee_percent').eq('id', 1).maybeSingle()
-    if (data) { setFeeFlat(String(data.ach_fee_flat ?? 0)); setFeePercent(String(data.ach_fee_percent ?? 0)) }
-  }
-
-  async function saveFee() {
-    setSavingFee(true); setFeeSaved(false)
-    const { error } = await supabase.from('platform_settings')
-      .update({ ach_fee_flat: parseFloat(feeFlat) || 0, ach_fee_percent: parseFloat(feePercent) || 0, updated_at: new Date().toISOString() })
-      .eq('id', 1)
-    setSavingFee(false)
-    if (!error) { setFeeSaved(true); setTimeout(() => setFeeSaved(false), 2500) }
-    else setActionErr(error.message)
-  }
+  useEffect(() => { fetchRequests() }, [])
 
   async function markCompleted(txn: TxnWithProfile) {
     setActionId(txn.id)
@@ -69,19 +50,18 @@ export default function WithdrawalRequestsPage() {
     await supabase.from('wallet_transactions')
       .update({ status: 'completed', updated_at: new Date().toISOString() })
       .eq('id', txn.id)
-    const net = txn.amount - (txn.fee || 0)
     await supabase.from('notifications').insert({
       user_id: txn.user_id,
       type: 'disbursement',
       title: 'Withdrawal Completed',
-      message: `Your ${txn.method === 'ach' ? 'ACH transfer' : 'debit card payout'} of ${formatCurrency(net)} has been completed and sent to your ${txn.method === 'ach' ? 'bank account' : 'card'}.`,
+      message: `Your ${txn.method === 'ach' ? 'ACH transfer' : 'debit card payout'} of ${formatCurrency(txn.amount)} has been completed and sent to your ${txn.method === 'ach' ? 'bank account' : 'card'}.`,
       read: false,
     })
     await sendEmailNotification({
       userId: txn.user_id,
       event: 'withdrawal_completed',
       title: 'Your Withdrawal Is Complete',
-      message: `Your ${txn.method === 'ach' ? 'ACH transfer' : 'debit card payout'} of ${formatCurrency(net)} has been completed and sent to your ${txn.method === 'ach' ? 'bank account' : 'card'}. Please allow 1–3 business days for it to post.`,
+      message: `Your ${txn.method === 'ach' ? 'ACH transfer' : 'debit card payout'} of ${formatCurrency(txn.amount)} has been completed and sent to your ${txn.method === 'ach' ? 'bank account' : 'card'}. Please allow 1–3 business days for it to post.`,
     })
     setActionId(null)
     fetchRequests()
@@ -221,41 +201,6 @@ export default function WithdrawalRequestsPage() {
         ))}
       </div>
 
-      {/* ACH fee settings */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl p-5" style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-        <div className="flex items-center gap-2 mb-1">
-          <DollarSign size={16} style={{ color: T.green }} />
-          <h3 className="text-sm font-bold" style={{ color: T.heading }}>ACH Transfer Fee</h3>
-        </div>
-        <p className="text-xs mb-4" style={{ color: T.muted }}>
-          Deducted from each withdrawal payout and shown to the user before they confirm. Leave at 0 for no fee.
-        </p>
-        <div className="flex flex-wrap items-end gap-4">
-          <div>
-            <label className="block text-[11px] font-semibold mb-1" style={{ color: T.sub }}>Flat fee ($)</label>
-            <input type="number" min="0" step="0.01" value={feeFlat} onChange={e => setFeeFlat(e.target.value)}
-              className="w-28 h-10 px-3 rounded-xl text-sm outline-none"
-              style={{ background: '#F8FAFC', border: `1px solid ${T.border}`, color: T.heading }} />
-          </div>
-          <div>
-            <label className="block text-[11px] font-semibold mb-1" style={{ color: T.sub }}>Percent (%)</label>
-            <input type="number" min="0" step="0.01" value={feePercent} onChange={e => setFeePercent(e.target.value)}
-              className="w-28 h-10 px-3 rounded-xl text-sm outline-none"
-              style={{ background: '#F8FAFC', border: `1px solid ${T.border}`, color: T.heading }} />
-          </div>
-          <button onClick={saveFee} disabled={savingFee}
-            className="h-10 px-5 rounded-xl text-sm font-bold text-white transition-all hover:brightness-105 disabled:opacity-60 flex items-center gap-2"
-            style={{ background: 'linear-gradient(135deg, #16A34A, #15803D)' }}>
-            {savingFee ? <Loader2 size={14} className="animate-spin" /> : feeSaved ? <Check size={14} /> : null}
-            {feeSaved ? 'Saved' : 'Save Fee'}
-          </button>
-          <div className="text-xs" style={{ color: T.muted }}>
-            e.g. a $500 withdrawal → fee {formatCurrency((parseFloat(feeFlat) || 0) + 500 * (parseFloat(feePercent) || 0) / 100)}, user gets {formatCurrency(Math.max(0, 500 - ((parseFloat(feeFlat) || 0) + 500 * (parseFloat(feePercent) || 0) / 100)))}
-          </div>
-        </div>
-      </motion.div>
-
       {/* Table */}
       <div className="rounded-2xl overflow-hidden"
         style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
@@ -305,11 +250,6 @@ export default function WithdrawalRequestsPage() {
                         <span style={{ color: T.muted }}>·</span>
                         <span className="text-xs" style={{ color: T.sub }}>{t.method === 'ach' ? 'ACH' : 'Debit Card'}</span>
                       </div>
-                      {(t.fee || 0) > 0 && (
-                        <div className="text-[11px] mt-0.5" style={{ color: T.muted }}>
-                          Fee {formatCurrency(t.fee || 0)} · Net payout {formatCurrency(t.amount - (t.fee || 0))}
-                        </div>
-                      )}
                     </div>
                     <div className="text-right shrink-0">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize"
@@ -368,14 +308,7 @@ export default function WithdrawalRequestsPage() {
                         <div className="font-semibold text-sm" style={{ color: T.heading }}>{t.profile?.full_name || '—'}</div>
                         <div className="text-xs mt-0.5" style={{ color: T.muted }}>{t.profile?.email}</div>
                       </td>
-                      <td className="px-5 py-3.5">
-                        <div className="font-bold text-sm" style={{ color: T.green }}>{formatCurrency(t.amount)}</div>
-                        {(t.fee || 0) > 0 && (
-                          <div className="text-[10px] mt-0.5" style={{ color: T.muted }}>
-                            −{formatCurrency(t.fee || 0)} fee · net {formatCurrency(t.amount - (t.fee || 0))}
-                          </div>
-                        )}
-                      </td>
+                      <td className="px-5 py-3.5 font-bold text-sm" style={{ color: T.green }}>{formatCurrency(t.amount)}</td>
                       <td className="px-5 py-3.5">
                         {t.method === 'ach' ? (
                           <div className="text-xs space-y-0.5" style={{ color: T.sub }}>
