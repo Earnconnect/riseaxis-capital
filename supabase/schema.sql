@@ -653,6 +653,10 @@ create unique index if not exists idx_applications_public_token
 -- SECURITY DEFINER so it can read past RLS, but it only ever returns the
 -- safe columns below, and only for an exact token match. Executable by
 -- anonymous visitors (the whole point is no login).
+-- NOTE: v5 below redefines this with more columns. Drop first so a
+-- re-run (where the v5 shape already exists) can't fail with
+-- "cannot change return type of existing function".
+drop function if exists public.get_application_public(uuid);
 create or replace function public.get_application_public(p_token uuid)
 returns table (
   app_number text,
