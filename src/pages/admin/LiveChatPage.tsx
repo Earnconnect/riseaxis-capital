@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { MessageCircle, Send, Loader2, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { sendEmailNotification } from '@/lib/email'
 import { useAuth } from '@/contexts/AuthContext'
 
 const T = {
@@ -117,13 +118,36 @@ export default function LiveChatPage() {
     if (!text || !selected || sending) return
     setSending(true)
     setInput('')
+
+    // Is the applicant actively chatting? (a user message in the last 3 min)
+    const lastUserMsg = thread.filter(m => m.sender_role === 'user').slice(-1)[0]
+    const userActive = lastUserMsg && (Date.now() - new Date(lastUserMsg.created_at).getTime() < 3 * 60 * 1000)
+
     const { error } = await supabase.from('chat_messages').insert({
       user_id: selected,
       sender_id: profile?.id,
       sender_role: 'admin',
       content: text,
     })
-    if (error) setInput(text)
+    if (error) { setInput(text); setSending(false); return }
+
+    // Always drop an in-app notification so it's waiting when they return.
+    await supabase.from('notifications').insert({
+      user_id: selected,
+      type: 'general',
+      title: 'New reply from RiseAxis Support',
+      message: text.length > 140 ? text.slice(0, 140) + '…' : text,
+    })
+    // Only email when they're not actively in the chat, to avoid spamming
+    // during a live back-and-forth.
+    if (!userActive) {
+      await sendEmailNotification({
+        userId: selected,
+        event: 'support_reply',
+        title: 'New Reply From RiseAxis Support',
+        message: text,
+      })
+    }
     setSending(false)
   }
 

@@ -118,6 +118,12 @@ const EVENTS = {
     cta: 'Sign In to Your Portal',
     next: '',   // no boilerplate — a custom email is just the admin's message
   },
+  support_reply: {
+    subject: 'New Reply From RiseAxis Support',
+    accent: '#2563EB', tag: 'Support Reply', icon: '&#128172;',
+    cta: 'Open Live Chat',
+    next: 'You have a new reply from our support team. Sign in and open the chat (bubble at the bottom-right of any page) to continue the conversation.',
+  },
   withdrawal_approved: {
     subject: 'Your Withdrawal Has Been Approved',
     accent: '#16A34A', tag: 'Withdrawal Approved', icon: '&#128179;',

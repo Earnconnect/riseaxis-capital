@@ -44,6 +44,16 @@ export default function AdminLayout() {
 
   const [pendingCount, setPendingCount]           = useState(0)
   const [pendingWithdrawals, setPendingWithdrawals] = useState(0)
+  const [unreadChats, setUnreadChats]             = useState(0)
+
+  function refreshUnreadChats() {
+    supabase
+      .from('chat_messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('sender_role', 'user')
+      .eq('read', false)
+      .then(({ count }) => setUnreadChats(count ?? 0))
+  }
 
   useEffect(() => {
     supabase
@@ -57,7 +67,17 @@ export default function AdminLayout() {
       .eq('type', 'withdrawal')
       .eq('status', 'pending')
       .then(({ count }) => setPendingWithdrawals(count ?? 0))
+    refreshUnreadChats()
   }, [location.pathname])
+
+  // Live-update the unread-chat badge as applicants send messages.
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-chat-badge')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_messages' }, () => refreshUnreadChats())
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [])
 
   const initials  = profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'A'
   const pageTitle = Object.entries(PAGE_TITLES).find(([p]) =>
@@ -135,6 +155,12 @@ export default function AdminLayout() {
                 <span className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
                   style={{ background: '#F59E0B' }}>
                   {pendingWithdrawals > 99 ? '99+' : pendingWithdrawals}
+                </span>
+              )}
+              {label === 'Live Chat' && unreadChats > 0 && (
+                <span className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                  style={{ background: '#16A34A' }}>
+                  {unreadChats > 99 ? '99+' : unreadChats}
                 </span>
               )}
             </Link>
