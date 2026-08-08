@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import SupportChatWidget from '@/components/support/SupportChatWidget'
 
 const NAV_MAIN = [
   { to: '/dashboard',      icon: LayoutDashboard, label: 'Dashboard',        exact: true },
@@ -357,6 +358,7 @@ export default function UserLayout() {
             <Outlet />
           </motion.div>
         </main>
+        <SupportChatWidget />
       </div>
     </div>
   )

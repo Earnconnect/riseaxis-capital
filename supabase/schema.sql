@@ -803,6 +803,51 @@ create policy "Admins can manage installments" on public.disbursement_installmen
 
 create index if not exists idx_installments_application_id on public.disbursement_installments(application_id);
 
+-- =============================================
+-- SCHEMA ADDITIONS v7 — live chat support
+-- Applicants chat with admins in real time. One conversation per
+-- applicant, keyed by user_id. Realtime is enabled so both sides see
+-- new messages instantly.
+-- =============================================
+
+create table if not exists public.chat_messages (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,  -- conversation owner (the applicant)
+  sender_id uuid references public.profiles(id) on delete set null,
+  sender_role text not null check (sender_role in ('user', 'admin')),
+  content text not null,
+  read boolean not null default false,
+  created_at timestamptz default now()
+);
+
+alter table public.chat_messages enable row level security;
+
+drop policy if exists "View own or admin chat" on public.chat_messages;
+create policy "View own or admin chat" on public.chat_messages
+  for select using (user_id = auth.uid() or public.is_admin());
+drop policy if exists "Insert into own or admin chat" on public.chat_messages;
+create policy "Insert into own or admin chat" on public.chat_messages
+  for insert with check (
+    (user_id = auth.uid() and sender_role = 'user') or public.is_admin()
+  );
+drop policy if exists "Admins manage chat" on public.chat_messages;
+create policy "Admins manage chat" on public.chat_messages
+  for all using (public.is_admin());
+
+create index if not exists idx_chat_messages_user_id on public.chat_messages(user_id);
+create index if not exists idx_chat_messages_created_at on public.chat_messages(created_at);
+
+-- Enable Supabase Realtime for this table (idempotent).
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'chat_messages'
+  ) then
+    alter publication supabase_realtime add table public.chat_messages;
+  end if;
+end $$;
+
 -- ========================
 -- MAKE YOURSELF ADMIN — run after creating your account:
 --   update public.profiles set role = 'admin' where email = 'your@email.com';

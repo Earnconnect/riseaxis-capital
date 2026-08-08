@@ -48,6 +48,7 @@ import ActivityPage from '@/pages/user/ActivityPage'
 import AnalyticsPage from '@/pages/admin/AnalyticsPage'
 import AuditLogPage from '@/pages/admin/AuditLogPage'
 import SupportTicketsPage from '@/pages/admin/SupportTicketsPage'
+import LiveChatPage from '@/pages/admin/LiveChatPage'
 import LoginPage from '@/pages/auth/LoginPage'
 import RegisterPage from '@/pages/auth/RegisterPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
@@ -151,6 +152,7 @@ export default function App() {
             <Route path="/admin/analytics"   element={<AnalyticsPage />} />
             <Route path="/admin/audit-log"   element={<AuditLogPage />} />
             <Route path="/admin/support"     element={<SupportTicketsPage />} />
+            <Route path="/admin/chat"        element={<LiveChatPage />} />
           </Route>
 
           {/* 404 */}

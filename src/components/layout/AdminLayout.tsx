@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CreditCard, LogOut,
   Menu, X, ShieldCheck, ChevronDown,
   FileText, ExternalLink, HelpCircle, ChevronRight, Users, ArrowDownToLine,
-  BarChart3, ClipboardList, LifeBuoy,
+  BarChart3, ClipboardList, LifeBuoy, MessageCircle,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
@@ -19,6 +19,7 @@ const NAV = [
   { to: '/admin/analytics',    icon: BarChart3,       label: 'Analytics',      exact: false },
   { to: '/admin/audit-log',    icon: ClipboardList,   label: 'Audit Log',      exact: false },
   { to: '/admin/support',      icon: LifeBuoy,        label: 'Support Tickets',exact: false },
+  { to: '/admin/chat',         icon: MessageCircle,   label: 'Live Chat',      exact: false },
 ]
 
 const PAGE_TITLES: Record<string, string> = {
@@ -30,6 +31,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/analytics':    'Analytics',
   '/admin/audit-log':    'Audit Log',
   '/admin/support':      'Support Tickets',
+  '/admin/chat':         'Live Chat',
 }
 
 export default function AdminLayout() {
