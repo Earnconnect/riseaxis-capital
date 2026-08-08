@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Users, Shield, UserCheck, Calendar, ChevronRight, X, ExternalLink, Mail, Phone } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { sendEmailNotification } from '@/lib/email'
 import { formatDateShort, formatCurrency } from '@/lib/utils'
 
 const T = {
@@ -47,6 +48,34 @@ export default function UsersPage() {
   const [selected, setSelected] = useState<UserProfile | null>(null)
   const [userApps, setUserApps] = useState<UserApp[]>([])
   const [loadingApps, setLoadingApps] = useState(false)
+  const [emailOpen, setEmailOpen]     = useState(false)
+  const [emailSubject, setEmailSubject] = useState('')
+  const [emailMessage, setEmailMessage] = useState('')
+  const [emailSending, setEmailSending] = useState(false)
+  const [emailSent, setEmailSent]     = useState(false)
+  const [emailError, setEmailError]   = useState('')
+
+  async function sendCustomEmail() {
+    if (!selected || !emailSubject.trim() || !emailMessage.trim()) return
+    setEmailSending(true); setEmailError('')
+    // In-app notification for a record the user sees in their portal too
+    await supabase.from('notifications').insert({
+      user_id: selected.id,
+      type: 'general',
+      title: emailSubject.trim(),
+      message: emailMessage.trim(),
+    })
+    await sendEmailNotification({
+      userId: selected.id,
+      event: 'custom',
+      subject: emailSubject.trim(),
+      title: emailSubject.trim(),
+      message: emailMessage.trim(),
+    })
+    setEmailSending(false)
+    setEmailSent(true)
+    setTimeout(() => { setEmailOpen(false); setEmailSent(false); setEmailSubject(''); setEmailMessage('') }, 1400)
+  }
 
   useEffect(() => { fetchUsers() }, [])
 
@@ -275,6 +304,11 @@ export default function UsersPage() {
                     <Calendar size={13} />
                     <span>Joined {formatDateShort(selected.created_at)}</span>
                   </div>
+                  <button onClick={() => { setEmailOpen(true); setEmailError(''); setEmailSent(false) }}
+                    className="w-full mt-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:brightness-105"
+                    style={{ background: 'linear-gradient(135deg, #2563EB, #1D4ED8)' }}>
+                    <Mail size={14} /> Send Custom Email
+                  </button>
                 </div>
 
                 {/* Stats */}
@@ -326,6 +360,74 @@ export default function UsersPage() {
                   )}
                 </div>
               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Custom email compose modal */}
+      <AnimatePresence>
+        {emailOpen && selected && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/40" onClick={() => { if (!emailSending) setEmailOpen(false) }} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 10 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+              className="fixed z-50 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 top-[6%] sm:w-[520px] rounded-2xl overflow-hidden"
+              style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: '0 32px 80px rgba(0,0,0,0.28)', maxHeight: '88vh', overflowY: 'auto' }}>
+              {emailSent ? (
+                <div className="px-6 py-12 text-center">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3"
+                    style={{ background: 'linear-gradient(135deg, #16A34A, #15803D)' }}>
+                    <Mail size={24} className="text-white" />
+                  </div>
+                  <h3 className="text-lg font-black" style={{ color: T.heading }}>Email Sent</h3>
+                  <p className="text-sm mt-1" style={{ color: T.muted }}>Delivered to {selected.email}</p>
+                </div>
+              ) : (
+                <>
+                  <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${T.border}` }}>
+                    <div>
+                      <div className="text-sm font-bold" style={{ color: T.heading }}>Send Custom Email</div>
+                      <div className="text-xs" style={{ color: T.muted }}>To {selected.full_name || selected.email} · {selected.email}</div>
+                    </div>
+                    <button onClick={() => setEmailOpen(false)} className="p-1.5 rounded-lg hover:bg-slate-100" style={{ color: T.muted }}>
+                      <X size={16} />
+                    </button>
+                  </div>
+                  <div className="p-5 space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold" style={{ color: T.sub }}>Subject</label>
+                      <input value={emailSubject} onChange={e => setEmailSubject(e.target.value)}
+                        placeholder="Email subject line"
+                        className="w-full h-10 px-3 rounded-xl text-sm outline-none"
+                        style={{ background: '#F8FAFC', border: `1px solid ${T.border}`, color: T.heading }} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold" style={{ color: T.sub }}>Message</label>
+                      <textarea rows={7} value={emailMessage} onChange={e => setEmailMessage(e.target.value)}
+                        placeholder="Write your message… line breaks are preserved."
+                        className="w-full text-sm rounded-xl p-3 resize-none outline-none"
+                        style={{ background: '#F8FAFC', border: `1px solid ${T.border}`, color: T.heading }} />
+                    </div>
+                    <p className="text-[11px]" style={{ color: T.muted }}>
+                      Sent on the branded RiseAxis Capital template with your subject and message. The applicant also sees it in their portal notifications.
+                    </p>
+                    {emailError && (
+                      <div className="px-3 py-2 rounded-lg text-xs" style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}>{emailError}</div>
+                    )}
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => setEmailOpen(false)} className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ color: T.sub, border: `1px solid ${T.border}` }}>Cancel</button>
+                      <button onClick={sendCustomEmail} disabled={emailSending || !emailSubject.trim() || !emailMessage.trim()}
+                        className="px-5 py-2 rounded-xl text-sm font-bold text-white transition-all hover:brightness-105 disabled:opacity-50 flex items-center gap-2"
+                        style={{ background: 'linear-gradient(135deg, #2563EB, #1D4ED8)' }}>
+                        <Mail size={14} /> {emailSending ? 'Sending…' : 'Send Email'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </motion.div>
           </>
         )}

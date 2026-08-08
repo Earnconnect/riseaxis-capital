@@ -19,6 +19,7 @@ export type EmailEvent =
   | 'withdrawal_approved'
   | 'withdrawal_rejected'
   | 'withdrawal_completed'
+  | 'custom'
 
 interface EmailArgs {
   userId: string          // recipient (the notification's target user)
@@ -26,6 +27,7 @@ interface EmailArgs {
   title?: string          // reuses the in-app notification title
   message?: string        // reuses the in-app notification message
   applicationId?: string
+  subject?: string        // overrides the email subject line (custom emails)
 }
 
 // Fire a transactional email via the /api/send-email serverless function.

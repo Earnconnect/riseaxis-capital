@@ -112,6 +112,12 @@ const EVENTS = {
     cta: 'View Your Application',
     next: 'A member of the RiseAxis Capital grants team has sent you a message regarding your application. Please review it and respond through your secure portal if a reply is requested.',
   },
+  custom: {
+    subject: 'A Message From RiseAxis Capital',
+    accent: '#2563EB', tag: 'Message', icon: '&#9993;',
+    cta: 'Sign In to Your Portal',
+    next: '',   // no boilerplate — a custom email is just the admin's message
+  },
   withdrawal_approved: {
     subject: 'Your Withdrawal Has Been Approved',
     accent: '#16A34A', tag: 'Withdrawal Approved', icon: '&#128179;',
@@ -317,14 +323,14 @@ function renderEmail({ event, title, message, name, link, app, docReq }) {
         ${summaryBlock}
 
         <!-- What happens next -->
-        <tr><td style="padding:18px 40px 8px;">
+        ${e.next ? `<tr><td style="padding:18px 40px 8px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PANEL};border:1px solid ${LINE};border-radius:12px;">
             <tr><td style="padding:16px 18px;">
               <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${MUTED};margin-bottom:6px;">What Happens Next</div>
               <div style="color:${BODY};font-size:13.5px;line-height:1.6;">${e.next}</div>
             </td></tr>
           </table>
-        </td></tr>
+        </td></tr>` : ''}
 
         <!-- Signature -->
         <tr><td style="padding:24px 40px 8px;">
@@ -368,7 +374,7 @@ export default async function handler(req, res) {
 
   let body = req.body
   if (typeof body === 'string') { try { body = JSON.parse(body) } catch { body = {} } }
-  const { userId, event, title, message, applicationId } = body || {}
+  const { userId, event, title, message, applicationId, subject } = body || {}
 
   if (!userId || !event || !EVENTS[event]) {
     return res.status(400).json({ error: 'Missing or invalid userId/event' })
@@ -452,7 +458,8 @@ export default async function handler(req, res) {
     body: JSON.stringify({
       from: EMAIL_FROM,
       to: [profile.email],
-      subject: EVENTS[event].subject,
+      // Admin-supplied subject (custom emails) overrides the event default.
+      subject: (typeof subject === 'string' && subject.trim()) ? subject.trim() : EVENTS[event].subject,
       html,
     }),
   })
