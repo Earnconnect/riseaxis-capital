@@ -118,6 +118,12 @@ const EVENTS = {
     cta: 'View Your Wallet',
     next: 'Your withdrawal request was not approved and the amount has been returned to your available wallet balance. You may submit a new withdrawal request, or contact support if you have questions.',
   },
+  withdrawal_completed: {
+    subject: 'Your Withdrawal Is Complete',
+    accent: '#16A34A', tag: 'Withdrawal Completed', icon: '&#9989;',
+    cta: 'View Your Wallet',
+    next: 'Your funds have been sent to your account. ACH transfers typically post within 1–3 business days. Thank you for using RiseAxis Capital.',
+  },
 }
 
 const PROGRAM_LABELS = {

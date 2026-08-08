@@ -17,6 +17,7 @@ export type EmailEvent =
   | 'message'
   | 'withdrawal_approved'
   | 'withdrawal_rejected'
+  | 'withdrawal_completed'
 
 interface EmailArgs {
   userId: string          // recipient (the notification's target user)

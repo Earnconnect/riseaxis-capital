@@ -768,6 +768,41 @@ $$;
 revoke all on function public.get_application_public(uuid) from public;
 grant execute on function public.get_application_public(uuid) to anon, authenticated;
 
+-- =============================================
+-- SCHEMA ADDITIONS v6 — withdrawal ACH fee (admin-configurable)
+-- The ACH transfer fee is DEDUCTED FROM THE PAYOUT (the user receives
+-- amount minus fee). Users never send a separate payment. Admin sets the
+-- fee here; the wallet page displays it before the user confirms.
+-- =============================================
+
+-- Singleton settings row (id is always 1).
+create table if not exists public.platform_settings (
+  id int primary key default 1 check (id = 1),
+  ach_fee_flat numeric(12, 2) not null default 0,      -- flat fee per withdrawal
+  ach_fee_percent numeric(5, 2) not null default 0,    -- percent of the amount
+  min_withdrawal numeric(12, 2) not null default 0,
+  updated_at timestamptz default now()
+);
+
+insert into public.platform_settings (id) values (1) on conflict (id) do nothing;
+
+alter table public.platform_settings enable row level security;
+
+-- Anyone signed in (and the public site) can read the fee to display it.
+drop policy if exists "Anyone can read settings" on public.platform_settings;
+create policy "Anyone can read settings" on public.platform_settings
+  for select using (true);
+drop policy if exists "Admins can update settings" on public.platform_settings;
+create policy "Admins can update settings" on public.platform_settings
+  for update using (public.is_admin());
+drop policy if exists "Admins can insert settings" on public.platform_settings;
+create policy "Admins can insert settings" on public.platform_settings
+  for insert with check (public.is_admin());
+
+-- Record the fee charged on each withdrawal (net payout = amount - fee).
+alter table public.wallet_transactions
+  add column if not exists fee numeric(12, 2) not null default 0;
+
 -- ========================
 -- MAKE YOURSELF ADMIN — run after creating your account:
 --   update public.profiles set role = 'admin' where email = 'your@email.com';
