@@ -5,7 +5,7 @@ import {
   Settings, LogOut, Menu, X, Plus, ChevronDown,
   HelpCircle, ClipboardList, UserCircle, Wallet,
   ChevronRight, ExternalLink, Megaphone,
-  LifeBuoy, Receipt, Activity,
+  LifeBuoy, Receipt, Activity, BadgeDollarSign,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
@@ -20,6 +20,7 @@ const NAV_MAIN = [
   { to: '/notifications',  icon: Bell,            label: 'Notifications',    exact: false },
   { to: '/wallet',         icon: Wallet,          label: 'My Wallet',        exact: false },
   { to: '/activity',       icon: Activity,        label: 'Activity',         exact: false },
+  { to: '/my-receipt',     icon: BadgeDollarSign, label: 'Funding Receipt',  exact: false },
 ]
 const NAV_ACCOUNT = [
   { to: '/profile',        icon: UserCircle, label: 'My Profile',     exact: false },
@@ -38,6 +39,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/profile':       'My Profile',
   '/wallet':        'My Wallet',
   '/activity':      'Activity',
+  '/my-receipt':    'Funding Receipt',
   '/tax-documents': 'Tax Documents',
   '/support':       'Help & Support',
 }

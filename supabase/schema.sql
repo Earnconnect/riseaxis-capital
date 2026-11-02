@@ -852,3 +852,27 @@ end $$;
 -- MAKE YOURSELF ADMIN — run after creating your account:
 --   update public.profiles set role = 'admin' where email = 'your@email.com';
 -- ========================
+
+-- =============================================
+-- SCHEMA ADDITIONS v8 — funding receipts
+-- Admin-curated funding summary shown on /my-receipt in the applicant
+-- portal. One row per applicant. When no row exists the portal builds the
+-- receipt from grant_applications + proof_of_payments automatically.
+-- =============================================
+
+create table if not exists public.funding_receipts (
+  user_id uuid references public.profiles(id) on delete cascade primary key,
+  config jsonb not null,
+  updated_by uuid references public.profiles(id) on delete set null,
+  updated_at timestamptz default now(),
+  created_at timestamptz default now()
+);
+
+alter table public.funding_receipts enable row level security;
+
+drop policy if exists "Users can view own funding receipt" on public.funding_receipts;
+create policy "Users can view own funding receipt" on public.funding_receipts
+  for select using (user_id = auth.uid());
+drop policy if exists "Admins manage funding receipts" on public.funding_receipts;
+create policy "Admins manage funding receipts" on public.funding_receipts
+  for all using (public.is_admin());

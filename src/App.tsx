@@ -39,6 +39,7 @@ import AccessibilityPage from '@/pages/public/AccessibilityPage'
 import StoriesPage from '@/pages/public/StoriesPage'
 import SitemapPage from '@/pages/public/SitemapPage'
 import PreApprovalPage from '@/pages/public/PreApprovalPage'
+import FundingReceiptPage from '@/pages/public/FundingReceiptPage'
 
 // User portal additions
 import SupportPage from '@/pages/user/SupportPage'
@@ -75,6 +76,8 @@ import PaymentDashboard from '@/pages/admin/PaymentDashboard'
 import CreateReceiptPage from '@/pages/admin/CreateReceiptPage'
 import ViewReceiptPage from '@/pages/admin/ViewReceiptPage'
 import PreApprovalBuilderPage from '@/pages/admin/PreApprovalBuilderPage'
+import FundingReceiptBuilderPage from '@/pages/admin/FundingReceiptBuilderPage'
+import MyFundingReceiptPage from '@/pages/user/MyFundingReceiptPage'
 
 export default function App() {
   return (
@@ -116,6 +119,7 @@ export default function App() {
 
           {/* Unlisted showcase page — standalone layout, driven by URL params */}
           <Route path="/preapproval" element={<PreApprovalPage />} />
+          <Route path="/receipt" element={<FundingReceiptPage />} />
 
           {/* User routes */}
           <Route
@@ -136,6 +140,7 @@ export default function App() {
             <Route path="/support"      element={<SupportPage />} />
             <Route path="/tax-documents" element={<TaxDocumentsPage />} />
             <Route path="/activity"     element={<ActivityPage />} />
+            <Route path="/my-receipt"   element={<MyFundingReceiptPage />} />
           </Route>
 
           {/* Admin routes */}
@@ -159,6 +164,7 @@ export default function App() {
             <Route path="/admin/support"     element={<SupportTicketsPage />} />
             <Route path="/admin/chat"        element={<LiveChatPage />} />
             <Route path="/admin/preapproval" element={<PreApprovalBuilderPage />} />
+            <Route path="/admin/receipt"     element={<FundingReceiptBuilderPage />} />
           </Route>
 
           {/* 404 */}

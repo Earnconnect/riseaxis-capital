@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CreditCard, LogOut,
   Menu, X, ShieldCheck, ChevronDown,
   FileText, ExternalLink, HelpCircle, ChevronRight, Users, ArrowDownToLine,
-  BarChart3, ClipboardList, LifeBuoy, MessageCircle, Sparkles,
+  BarChart3, ClipboardList, LifeBuoy, MessageCircle, Sparkles, Receipt,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
@@ -21,6 +21,7 @@ const NAV = [
   { to: '/admin/support',      icon: LifeBuoy,        label: 'Support Tickets',exact: false },
   { to: '/admin/chat',         icon: MessageCircle,   label: 'Live Chat',      exact: false },
   { to: '/admin/preapproval',  icon: Sparkles,        label: 'Pre-approval Page', exact: false },
+  { to: '/admin/receipt',      icon: Receipt,         label: 'Funding Receipt',  exact: false },
 ]
 
 const PAGE_TITLES: Record<string, string> = {
@@ -34,6 +35,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/support':      'Support Tickets',
   '/admin/chat':         'Live Chat',
   '/admin/preapproval':  'Pre-approval Page',
+  '/admin/receipt':      'Funding Receipt',
 }
 
 export default function AdminLayout() {

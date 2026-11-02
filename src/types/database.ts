@@ -202,6 +202,22 @@ export interface Database {
         }
         Update: Partial<Database['public']['Tables']['notification_settings']['Row']>
       }
+      funding_receipts: {
+        Row: {
+          user_id: string
+          config: Json
+          updated_by: string | null
+          updated_at: string
+          created_at: string
+        }
+        Insert: {
+          user_id: string
+          config: Json
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['funding_receipts']['Insert']>
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
