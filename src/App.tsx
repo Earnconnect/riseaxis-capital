@@ -38,6 +38,7 @@ import FraudWarningPage from '@/pages/public/FraudWarningPage'
 import AccessibilityPage from '@/pages/public/AccessibilityPage'
 import StoriesPage from '@/pages/public/StoriesPage'
 import SitemapPage from '@/pages/public/SitemapPage'
+import PreApprovalPage from '@/pages/public/PreApprovalPage'
 
 // User portal additions
 import SupportPage from '@/pages/user/SupportPage'
@@ -73,6 +74,7 @@ import ReviewApplicationPage from '@/pages/admin/ReviewApplicationPage'
 import PaymentDashboard from '@/pages/admin/PaymentDashboard'
 import CreateReceiptPage from '@/pages/admin/CreateReceiptPage'
 import ViewReceiptPage from '@/pages/admin/ViewReceiptPage'
+import PreApprovalBuilderPage from '@/pages/admin/PreApprovalBuilderPage'
 
 export default function App() {
   return (
@@ -111,6 +113,9 @@ export default function App() {
             {/* AI chat accessible to public */}
             <Route path="/apply/chat" element={<AIChatPage />} />
           </Route>
+
+          {/* Unlisted showcase page — standalone layout, driven by URL params */}
+          <Route path="/preapproval" element={<PreApprovalPage />} />
 
           {/* User routes */}
           <Route
@@ -153,6 +158,7 @@ export default function App() {
             <Route path="/admin/audit-log"   element={<AuditLogPage />} />
             <Route path="/admin/support"     element={<SupportTicketsPage />} />
             <Route path="/admin/chat"        element={<LiveChatPage />} />
+            <Route path="/admin/preapproval" element={<PreApprovalBuilderPage />} />
           </Route>
 
           {/* 404 */}
